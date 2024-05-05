@@ -1,4 +1,5 @@
 const express = require("express");
+const path = require("path");
 const mongoose = require("mongoose");
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
@@ -24,11 +25,6 @@ app.use(cors());
 
 // routes middleware
 readdirSync("./routes").map((r) => app.use("/api", require("./routes/" + r)));
-
-// 404 Route - Catch-all route
-app.use((req, res) => {
-  res.status(404).json({ error: "Not found" });
-});
 
 // port
 const port = process.env.PORT || 8000;

@@ -2,7 +2,7 @@ const express = require("express");
 const { auth } = require("../firebase");
 
 const router = express.Router();
-// 123132
+
 // middlewares
 const { authCheck, adminCheck, expiryCheck } = require("../middlewares/auth");
 
