@@ -44,16 +44,16 @@ router.get("/product/:slug", expiryCheck, read);
 router.put("/product/:slug", expiryCheck, authCheck, adminCheck, update);
 
 // list products based on bestselling
-router.post("/products", expiryCheck, list);
+// router.post("/products", expiryCheck, list);
 
 // list reviews based on createdOn date
 router.post("/reviews", expiryCheck, reviewslist);
 
 //Flashsale
-router.post("/products/flash", expiryCheck, flashlist);
+// router.post("/products/flash", expiryCheck, flashlist);
 router.post("/products/currentflash", expiryCheck, flashcurrent);
 router.post("/product/checkflash/:slug", expiryCheck, checkFlash);
-router.post("/product/flashreset", expiryCheck, flashreset);
+// router.post("/product/flashreset", expiryCheck, flashreset);
 
 // rating
 router.put("/product/review/:productId", expiryCheck, authCheck, productStar);
@@ -61,7 +61,7 @@ router.get("/ratedAll", expiryCheck, authCheck, ratedProducts);
 // Similar
 router.get("/product/Similar/:slug", expiryCheck, listSimilar);
 // related
-router.get("/product/related/:productId", expiryCheck, listRelated);
+// router.get("/product/related/:productId", expiryCheck, listRelated);
 // search
 router.post("/search/filters", expiryCheck, searchFilters);
 // Highest Price for price filter

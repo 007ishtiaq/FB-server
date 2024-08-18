@@ -43,14 +43,18 @@ const productSchema = new mongoose.Schema(
       type: ObjectId,
       ref: "Category",
     },
-    subs: {
-      type: ObjectId,
-      ref: "Sub",
-    },
-    subs2: [
+    attributes: [
       {
-        type: ObjectId,
-        ref: "Sub2",
+        subs: {
+          type: ObjectId,
+          ref: "Sub",
+        },
+        subs2: [
+          {
+            type: ObjectId,
+            ref: "Sub2",
+          },
+        ],
       },
     ],
     weight: {

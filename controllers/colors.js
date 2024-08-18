@@ -1,4 +1,4 @@
-const Color = require("../models/Color");
+const Color = require("../models/color");
 const slugify = require("slugify");
 
 exports.create = async (req, res) => {

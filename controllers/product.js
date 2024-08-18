@@ -27,8 +27,6 @@ exports.listAll = async (req, res) => {
   let products = await Product.find({})
     .limit(parseInt(req.params.count))
     .populate("category")
-    .populate("subs")
-    .populate("subs2")
     .sort([["createdAt", "desc"]])
     .exec();
   res.json(products);
@@ -51,8 +49,8 @@ exports.read = async (req, res) => {
     const product = await Product.findOne({ slug: req.params.slug })
       .select("-saleTime") // Exclude the saleTime field
       .populate("category")
-      .populate("subs")
-      .populate("subs2")
+      .populate("attributes.subs")
+      .populate("attributes.subs2")
       .exec();
 
     if (!product) {
@@ -68,8 +66,8 @@ exports.readAdmin = async (req, res) => {
   try {
     const product = await Product.findOne({ slug: req.params.slug })
       .populate("category")
-      .populate("subs")
-      .populate("subs2")
+      .populate("attributes.subs")
+      .populate("attributes.subs2")
       .exec();
 
     if (!product) {
@@ -86,8 +84,8 @@ exports.listSimilar = async (req, res) => {
   try {
     const product = await Product.findOne({ slug: req.params.slug })
       .populate("category")
-      .populate("subs")
-      .populate("subs2")
+      .populate("attributes.subs")
+      .populate("attributes.subs2")
       .exec();
 
     const patern = product.slug.substring(0, product.slug.lastIndexOf("-"));
@@ -169,28 +167,26 @@ exports.update = async (req, res) => {
 // };
 
 // WITH PAGINATION
-exports.list = async (req, res) => {
-  // console.table(req.body);
-  try {
-    // createdAt/updatedAt, desc/asc, 3
-    const { sort, order, page } = req.body;
-    const currentPage = page || 1;
-    const perPage = 3; // 3
+// exports.list = async (req, res) => {
+//   try {
+//     const { sort, order, page } = req.body;
+//     const currentPage = page || 1;
+//     const perPage = 3; // 3
 
-    const products = await Product.find({})
-      .skip((currentPage - 1) * perPage)
-      .populate("category")
-      .populate("subs")
-      .populate("subs2")
-      .sort([[sort, order]])
-      .limit(perPage)
-      .exec();
+//     const products = await Product.find({})
+//       .skip((currentPage - 1) * perPage)
+//       .populate("category")
+//       .populate("subs")
+//       .populate("subs2")
+//       .sort([[sort, order]])
+//       .limit(perPage)
+//       .exec();
 
-    res.json(products);
-  } catch (err) {
-    console.log(err);
-  }
-};
+//     res.json(products);
+//   } catch (err) {
+//     console.log(err);
+//   }
+// };
 
 exports.reviewslist = async (req, res) => {
   try {
@@ -228,29 +224,28 @@ exports.reviewslist = async (req, res) => {
   }
 };
 
-exports.flashlist = async (req, res) => {
-  // console.table(req.body);
-  try {
-    const products = await Product.find({ onSale: "Yes" })
-      .populate("category")
-      .populate("subs")
-      .populate("subs2")
-      .exec();
+// exports.flashlist = async (req, res) => {
+//   try {
+//     const products = await Product.find({ onSale: "Yes" })
+//       .populate("category")
+//       .populate("subs")
+//       .populate("subs2")
+//       .exec();
 
-    res.json(products);
-  } catch (err) {
-    console.log(err);
-    res.status(400).send("Flash Products list failed");
-  }
-};
+//     res.json(products);
+//   } catch (err) {
+//     console.log(err);
+//     res.status(400).send("Flash Products list failed");
+//   }
+// };
 
 exports.flashcurrent = async (req, res) => {
   try {
     const now = new Date();
     const products = await Product.find({ onSale: "Yes" })
       .populate("category")
-      .populate("subs")
-      .populate("subs2")
+      .populate("attributes.subs")
+      .populate("attributes.subs2")
       .exec();
 
     const uniqueTimes = Array.from(
@@ -277,8 +272,8 @@ exports.flashcurrent = async (req, res) => {
     // Return products that are currently on sale
     const updatedProducts = await Product.find({ onSale: "Yes" })
       .populate("category")
-      .populate("subs")
-      .populate("subs2")
+      .populate("attributes.subs")
+      .populate("attributes.subs2")
       .exec();
 
     const nearestSaleTime = uniqueTimes
@@ -340,8 +335,8 @@ exports.checkFlash = async (req, res) => {
     // Return products that are currently on sale
     const updatedProducts = await Product.find({ onSale: "Yes" })
       .populate("category")
-      .populate("subs")
-      .populate("subs2")
+      .populate("attributes.subs")
+      .populate("attributes.subs2")
       .exec();
 
     // Calculate the nearest sale time among the products that are currently on sale
@@ -365,26 +360,26 @@ exports.checkFlash = async (req, res) => {
   }
 };
 
-exports.flashreset = async (req, res) => {
-  try {
-    console.log("req.body of Flash reset", req.body.date);
+// exports.flashreset = async (req, res) => {
+//   try {
+//     console.log("req.body of Flash reset", req.body.date);
 
-    let products = await Product.find({ onSale: "Yes" }).exec();
+//     let products = await Product.find({ onSale: "Yes" }).exec();
 
-    let bulkOption = products.map((item) => {
-      return {
-        updateOne: {
-          filter: { saleTime: req.body.date }, // IMPORTANT item.product
-          update: { $set: { saleTime: "", onSale: "No" } },
-        },
-      };
-    });
-    const updated = await Product.bulkWrite(bulkOption, {});
-    console.log("flash reset success", updated);
-  } catch (err) {
-    console.log("Flash UPDATE ERROR ----> ", err);
-  }
-};
+//     let bulkOption = products.map((item) => {
+//       return {
+//         updateOne: {
+//           filter: { saleTime: req.body.date }, // IMPORTANT item.product
+//           update: { $set: { saleTime: "", onSale: "No" } },
+//         },
+//       };
+//     });
+//     const updated = await Product.bulkWrite(bulkOption, {});
+//     console.log("flash reset success", updated);
+//   } catch (err) {
+//     console.log("Flash UPDATE ERROR ----> ", err);
+//   }
+// };
 
 exports.productsCount = async (req, res) => {
   let total = await Product.find({}).estimatedDocumentCount().exec();
@@ -445,22 +440,21 @@ exports.ratedProducts = async (req, res) => {
   res.json(Ratedproducts);
 };
 
-exports.listRelated = async (req, res) => {
-  const product = await Product.findById(req.params.productId).exec();
+// exports.listRelated = async (req, res) => {
+//   const product = await Product.findById(req.params.productId).exec();
 
-  const related = await Product.find({
-    _id: { $ne: product._id },
-    category: product.category,
-  })
-    .limit(3)
-    .populate("category")
-    .populate("subs")
-    .populate("subs2")
-    // .populate("postedBy")
-    .exec();
+//   const related = await Product.find({
+//     _id: { $ne: product._id },
+//     category: product.category,
+//   })
+//     .limit(3)
+//     .populate("category")
+//     .populate("subs")
+//     .populate("subs2")
+//     .exec();
 
-  res.json(related);
-};
+//   res.json(related);
+// };
 
 // SERACH / FILTER
 // const handleQuery = async (req, res, query) => {
@@ -472,13 +466,83 @@ exports.listRelated = async (req, res) => {
 //   res.json(products);
 // };
 
+// const handleQuery = async (req, res, query) => {
+//   try {
+//     // Perform text search on title and description
+//     const textSearchResults = await Product.find({ $text: { $search: query } })
+//       .populate("category", "_id name")
+//       .populate("attributes.subs")
+//       .populate("attributes.subs2")
+//       .exec();
+//     // If text search results are not empty, return them
+//     if (textSearchResults.length !== 0) {
+//       return res.json(textSearchResults);
+//     }
+//     // Fetch all products
+//     const allProducts = await Product.find({})
+//       .populate("category", "_id name")
+//       .populate("attributes.subs")
+//       .populate("attributes.subs2")
+//       .exec();
+//     // Filter products by category name
+//     let categorySearchResults = allProducts.filter((product) =>
+//       product.category.name.toLowerCase().includes(query.toLowerCase())
+//     );
+//     // If category search results are empty, search by sub
+//     if (categorySearchResults.length === 0) {
+//       // let subSearchResults = allProducts.filter((product) =>
+//       //   product.subs.name.toLowerCase().includes(query.toLowerCase())
+//       // );
+
+//       // If sub search results are empty, search by sub2
+//       if (subSearchResults.length === 0) {
+//         // let sub2SearchResults = allProducts.filter((product) =>
+//         //   product.subs2.some((sub2) =>
+//         //     sub2.name.toLowerCase().includes(query.toLowerCase())
+//         //   )
+//         // );
+//         if (sub2SearchResults.length === 0) {
+//           let colorSearchResults = allProducts.filter((product) =>
+//             product.color.toLowerCase().includes(query.toLowerCase())
+//           );
+//           if (colorSearchResults.length === 0) {
+//             let brandSearchResults = allProducts.filter((product) =>
+//               product.brand.toLowerCase().includes(query.toLowerCase())
+//             );
+//             if (brandSearchResults.length === 0) {
+//               let artSearchResults = allProducts.filter(
+//                 (product) => product.art === parseInt(query)
+//               );
+
+//               res.json(artSearchResults);
+//             } else {
+//               res.json(brandSearchResults);
+//             }
+//           } else {
+//             res.json(colorSearchResults);
+//           }
+//         } else {
+//           res.json(sub2SearchResults);
+//         }
+//       } else {
+//         res.json(subSearchResults);
+//       }
+//     } else {
+//       res.json(categorySearchResults);
+//     }
+//   } catch (err) {
+//     console.error("Error handling query:", err);
+//     res.status(500).json({ error: "Internal server error" });
+//   }
+// };
+
 const handleQuery = async (req, res, query) => {
   try {
     // Perform text search on title and description
     const textSearchResults = await Product.find({ $text: { $search: query } })
       .populate("category", "_id name")
-      .populate("subs", "_id name")
-      .populate("subs2", "_id name")
+      .populate("attributes.subs")
+      .populate("attributes.subs2")
       .exec();
 
     // If text search results are not empty, return them
@@ -489,63 +553,84 @@ const handleQuery = async (req, res, query) => {
     // Fetch all products
     const allProducts = await Product.find({})
       .populate("category", "_id name")
-      .populate("subs", "_id name")
-      .populate("subs2", "_id name")
+      .populate("attributes.subs")
+      .populate("attributes.subs2")
       .exec();
 
-    // Filter products by category name
-    let categorySearchResults = allProducts.filter((product) =>
-      product.category.name.toLowerCase().includes(query.toLowerCase())
+    const lowerCaseQuery = query.toLowerCase();
+
+    // Search by title (case-insensitive)
+    let titleSearchResults = allProducts.filter((product) =>
+      product.title.toLowerCase().includes(lowerCaseQuery)
     );
-
-    // If category search results are empty, search by sub
-    if (categorySearchResults.length === 0) {
-      let subSearchResults = allProducts.filter((product) =>
-        product.subs.name.toLowerCase().includes(query.toLowerCase())
-      );
-
-      // If sub search results are empty, search by sub2
-      if (subSearchResults.length === 0) {
-        let sub2SearchResults = allProducts.filter((product) =>
-          product.subs2.some((sub2) =>
-            sub2.name.toLowerCase().includes(query.toLowerCase())
-          )
-        );
-
-        // If sub2 search results are empty, search by color
-        if (sub2SearchResults.length === 0) {
-          let colorSearchResults = allProducts.filter((product) =>
-            product.color.toLowerCase().includes(query.toLowerCase())
-          );
-
-          // If color search results are empty, search by brand
-          if (colorSearchResults.length === 0) {
-            let brandSearchResults = allProducts.filter((product) =>
-              product.brand.toLowerCase().includes(query.toLowerCase())
-            );
-
-            // If brand search results are empty, search by art
-            if (brandSearchResults.length === 0) {
-              let artSearchResults = allProducts.filter(
-                (product) => product.art === parseInt(query)
-              );
-
-              res.json(artSearchResults);
-            } else {
-              res.json(brandSearchResults);
-            }
-          } else {
-            res.json(colorSearchResults);
-          }
-        } else {
-          res.json(sub2SearchResults);
-        }
-      } else {
-        res.json(subSearchResults);
-      }
-    } else {
-      res.json(categorySearchResults);
+    if (titleSearchResults.length !== 0) {
+      return res.json(titleSearchResults);
     }
+
+    // Search by description (case-insensitive)
+    let descriptionSearchResults = allProducts.filter((product) =>
+      product.description.toLowerCase().includes(lowerCaseQuery)
+    );
+    if (descriptionSearchResults.length !== 0) {
+      return res.json(descriptionSearchResults);
+    }
+
+    // Search by category (case-insensitive)
+    let categorySearchResults = allProducts.filter((product) =>
+      product.category.name.toLowerCase().includes(lowerCaseQuery)
+    );
+    if (categorySearchResults.length !== 0) {
+      return res.json(categorySearchResults);
+    }
+
+    // Search by subs (case-insensitive)
+    let subSearchResults = allProducts.filter((product) =>
+      product.attributes.some((attr) =>
+        attr.subs.name.toLowerCase().includes(lowerCaseQuery)
+      )
+    );
+    if (subSearchResults.length !== 0) {
+      return res.json(subSearchResults);
+    }
+
+    // Search by subs2 (case-insensitive)
+    let sub2SearchResults = allProducts.filter((product) =>
+      product.attributes.some((attr) =>
+        attr.subs2.some((sub2) =>
+          sub2.name.toLowerCase().includes(lowerCaseQuery)
+        )
+      )
+    );
+    if (sub2SearchResults.length !== 0) {
+      return res.json(sub2SearchResults);
+    }
+
+    // Search by color (case-insensitive)
+    let colorSearchResults = allProducts.filter((product) =>
+      product.color.toLowerCase().includes(lowerCaseQuery)
+    );
+    if (colorSearchResults.length !== 0) {
+      return res.json(colorSearchResults);
+    }
+
+    // Search by brand (case-insensitive)
+    let brandSearchResults = allProducts.filter((product) =>
+      product.brand.toLowerCase().includes(lowerCaseQuery)
+    );
+    if (brandSearchResults.length !== 0) {
+      return res.json(brandSearchResults);
+    }
+
+    // Search by art (exact match)
+    let artSearchResults = allProducts.filter(
+      (product) => product.art === parseInt(query)
+    );
+    if (artSearchResults.length !== 0) {
+      return res.json(artSearchResults);
+    }
+
+    // If no results found
+    res.status(404).json({ message: "No products found" });
   } catch (err) {
     console.error("Error handling query:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -561,9 +646,8 @@ const handlePrice = async (req, res, price) => {
       },
     })
       .populate("category", "_id name")
-      .populate("subs", "_id name")
-      // .populate("subs2")
-      // .populate("postedBy", "_id name")
+      .populate("attributes.subs")
+      .populate("attributes.subs2")
       .exec();
 
     res.json(products);
@@ -576,9 +660,8 @@ const handleCategory = async (req, res, category) => {
   try {
     let products = await Product.find({ category })
       .populate("category", "_id name")
-      .populate("subs", "_id name")
-      // .populate("subs2")
-      // .populate("postedBy", "_id name")
+      .populate("attributes.subs")
+      .populate("attributes.subs2")
       .exec();
 
     res.json(products);
@@ -607,7 +690,8 @@ const handleStar = async (req, res, stars) => {
 
     const products = await Product.find({ _id: { $in: productIds } })
       .populate("category", "_id name")
-      .populate("subs", "_id name")
+      .populate("attributes.subs")
+      .populate("attributes.subs2")
       .exec();
 
     res.json(products);
@@ -618,20 +702,31 @@ const handleStar = async (req, res, stars) => {
 };
 
 const handleSub = async (req, res, sub) => {
-  const products = await Product.find({ subs: sub })
-    .populate("category", "_id name")
-    .populate("subs", "_id name")
-    // .populate("subs2")
-    // .populate("postedBy", "_id name")
-    .exec();
+  console.log("sub", sub);
+  try {
+    // Use MongoDB's $elemMatch to match an element in the array
+    const products = await Product.find({
+      "attributes.subs2": { $elemMatch: { $eq: sub } },
+    })
+      .populate("category", "_id name")
+      .populate("attributes.subs")
+      .populate("attributes.subs2")
+      .exec();
 
-  res.json(products);
+    res.json(products);
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching products" });
+  }
 };
 
 const handleShipping = async (req, res, shipping) => {
   const products = await Product.find({ shipping })
     .populate("category", "_id name")
-    .populate("subs", "_id name")
+    .populate("attributes.subs")
+    .populate("attributes.subs2")
     // .populate("subs2")
     // .populate("postedBy", "_id name")
     .exec();
@@ -642,7 +737,8 @@ const handleShipping = async (req, res, shipping) => {
 const handleColor = async (req, res, color) => {
   const products = await Product.find({ color })
     .populate("category", "_id name")
-    .populate("subs", "_id name")
+    .populate("attributes.subs")
+    .populate("attributes.subs2")
     // .populate("subs2")
     // .populate("postedBy", "_id name")
     .exec();
@@ -653,7 +749,8 @@ const handleColor = async (req, res, color) => {
 const handleBrand = async (req, res, brand) => {
   const products = await Product.find({ brand })
     .populate("category", "_id name")
-    .populate("subs", "_id name")
+    .populate("attributes.subs")
+    .populate("attributes.subs2")
     // .populate("subs2")
     // .populate("postedBy", "_id name")
     .exec();
