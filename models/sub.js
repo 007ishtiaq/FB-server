@@ -16,6 +16,14 @@ const subSchema = new mongoose.Schema(
       lowercase: true,
       index: true,
     },
+    image: {
+      url: {
+        type: String,
+      },
+      public_id: {
+        type: String,
+      },
+    },
     parent: { type: ObjectId, ref: "Category", required: true },
   },
   { timestamps: true }

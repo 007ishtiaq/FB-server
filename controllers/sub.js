@@ -6,12 +6,13 @@ const Sub2 = require("../models/sub2");
 
 exports.create = async (req, res) => {
   try {
-    const { name, parent } = req.body;
+    const { name, parent, image } = req.body;
     let category = await Category.findOne({ _id: parent }).exec();
     res.json(
       await new Sub({
         name,
         parent,
+        image,
         slug: slugify(`${name} - ${category.name}`),
       }).save()
     );
@@ -37,12 +38,14 @@ exports.read = async (req, res) => {
 };
 
 exports.update = async (req, res) => {
-  const { name, parent } = req.body;
+  const { name, parent, image } = req.body;
+  console.log(req.body);
+
   try {
     let category = await Category.findOne({ _id: parent }).exec();
     const updated = await Sub.findOneAndUpdate(
       { slug: req.params.slug },
-      { name, parent, slug: slugify(`${name} - ${category.name}`) },
+      { name, parent, image, slug: slugify(`${name} - ${category.name}`) },
       { new: true }
     );
     res.json(updated);

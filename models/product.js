@@ -30,7 +30,6 @@ const productSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
-      required: true,
       trim: true,
       maxlength: 32,
     },

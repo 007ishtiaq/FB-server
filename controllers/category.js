@@ -97,6 +97,7 @@ exports.getCategoriesWithChildren = async (req, res) => {
             _id: sub._id,
             name: sub.name,
             slug: sub.slug,
+            image: sub.image,
             children: sub2sWithChildren,
           };
         })
