@@ -2,6 +2,7 @@ const Product = require("../models/product");
 const User = require("../models/user");
 const slugify = require("slugify");
 const Category = require("../models/category");
+const Shipping = require("../models/shipping");
 
 exports.create = async (req, res) => {
   try {
@@ -13,6 +14,22 @@ exports.create = async (req, res) => {
 
     // Generate slug based on title and color
     req.body.slug = slugify(`${req.body.title} - ${req.body.color}`);
+
+    // Handle shipping charges
+    if (req.body.shippingcharges === "" || req.body.shippingcharges == null) {
+      // Calculate shipping charges if not provided or empty string
+      let shippingfee = 0;
+      let shippings = await Shipping.find({}).exec();
+      for (let i = 0; i < shippings.length; i++) {
+        if (
+          req.body.weight <= shippings[i].weightend &&
+          req.body.weight >= shippings[i].weightstart
+        ) {
+          shippingfee = shippings[i].charges;
+        }
+      }
+      req.body.shippingcharges = shippingfee;
+    }
 
     // Create new product
     const newProduct = await Product.create(req.body);
@@ -133,6 +150,23 @@ exports.update = async (req, res) => {
     if (req.body.title && req.body.color) {
       req.body.slug = slugify(`${req.body.title} - ${req.body.color}`);
     }
+
+    // Handle shipping charges
+    if (req.body.shippingcharges === "" || req.body.shippingcharges == null) {
+      // Calculate shipping charges if not provided or empty string
+      let shippingfee = 0;
+      let shippings = await Shipping.find({}).exec();
+      for (let i = 0; i < shippings.length; i++) {
+        if (
+          req.body.weight <= shippings[i].weightend &&
+          req.body.weight >= shippings[i].weightstart
+        ) {
+          shippingfee = shippings[i].charges;
+        }
+      }
+      req.body.shippingcharges = shippingfee;
+    }
+
     const updated = await Product.findOneAndUpdate(
       { slug: req.params.slug },
       req.body,
