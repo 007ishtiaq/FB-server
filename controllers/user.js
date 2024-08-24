@@ -242,6 +242,8 @@ exports.couponValidation = async (req, res) => {
     .populate("products.product", "_id title price")
     .exec();
 
+  console.log("cartTotal in coupon", cartTotal);
+
   if (cartTotal < parseInt(couponDetails.condition)) {
     return res.json({
       err: `Cart value should be more then Rs. "${couponDetails.condition}".`,
