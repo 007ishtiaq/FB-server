@@ -44,14 +44,15 @@ exports.userCart = async (req, res) => {
     let productFromDb = await Product.findById(cart[i]._id)
       .select("price disprice")
       .exec();
-    object.price = productFromDb.disprice
-      ? productFromDb.disprice
-      : productFromDb.price;
+    object.price =
+      productFromDb.disprice !== null
+        ? productFromDb.disprice
+        : productFromDb.price;
 
     products.push(object);
   }
 
-  // console.log('products', products)
+  // console.log("products in order saving", products);
 
   let cartTotal = 0;
   for (let i = 0; i < products.length; i++) {
