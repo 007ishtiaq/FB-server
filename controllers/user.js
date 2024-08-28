@@ -52,37 +52,32 @@ exports.userCart = async (req, res) => {
     products.push(object);
   }
 
-  // console.log("products in order saving", products);
+  console.log("products in order saving", products);
 
   let cartTotal = 0;
   for (let i = 0; i < products.length; i++) {
     cartTotal = cartTotal + products[i].price * products[i].count;
   }
-
   // console.log("cartTotal", cartTotal);
 
-  let totalWeight = 0;
-  for (let i = 0; i < products.length; i++) {
-    let productFromDb = await Product.findById(products[i].product)
-      .select("weight")
-      .exec();
-    totalWeight = totalWeight + productFromDb.weight * products[i].count;
-  }
-  // console.log("productFromDb in backend", totalWeight);
+  //shipping fee (total of all shippings in products)
 
   let shippingfee = 0;
 
-  let shippings = await Shipping.find({}).exec();
+  for (let i = 0; i < products.length; i++) {
+    let productFromDb = await Product.findById(products[i].product)
+      .select("shippingcharges")
+      .exec();
 
-  for (let i = 0; i < shippings.length; i++) {
-    if (
-      totalWeight <= shippings[i].weightend &&
-      totalWeight >= shippings[i].weightstart
-    ) {
-      shippingfee = shippings[i].charges;
+    if (products[i].price === 0) {
+      // For products with price 0, multiply shipping charges by count
+      shippingfee += productFromDb.shippingcharges * products[i].count;
+    } else {
+      shippingfee += productFromDb.shippingcharges;
     }
   }
-  // console.log("shippingfee in backend", shippingfee);
+
+  console.log("shippingfee in backend", shippingfee);
 
   let newCart = await new Cart({
     products,
