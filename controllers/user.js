@@ -52,8 +52,6 @@ exports.userCart = async (req, res) => {
     products.push(object);
   }
 
-  console.log("products in order saving", products);
-
   let cartTotal = 0;
   for (let i = 0; i < products.length; i++) {
     cartTotal = cartTotal + products[i].price * products[i].count;
@@ -61,7 +59,6 @@ exports.userCart = async (req, res) => {
   // console.log("cartTotal", cartTotal);
 
   //shipping fee (total of all shippings in products)
-
   let shippingfee = 0;
 
   for (let i = 0; i < products.length; i++) {
@@ -76,8 +73,6 @@ exports.userCart = async (req, res) => {
       shippingfee += productFromDb.shippingcharges;
     }
   }
-
-  console.log("shippingfee in backend", shippingfee);
 
   let newCart = await new Cart({
     products,
@@ -232,17 +227,24 @@ exports.couponValidation = async (req, res) => {
 
   // taking user cart total to check min value of card
   const user = await User.findOne({ email: req.user.email }).exec();
-  let { cartTotal } = await Cart.findOne({
+  let { cartTotal, products } = await Cart.findOne({
     orderdBy: user._id,
   })
     .populate("products.product", "_id title price")
     .exec();
 
-  console.log("cartTotal in coupon", cartTotal);
+  // console.log("cart in coupon validation", products);
+
+  const hasFreeItem = products.some((item) => item.price === 0);
+  if (hasFreeItem) {
+    return res.json({
+      err: `Coupon not applicable for free items.`,
+    });
+  }
 
   if (cartTotal < parseInt(couponDetails.condition)) {
     return res.json({
-      err: `Cart value should be more then Rs. "${couponDetails.condition}".`,
+      err: `Cart value should be more then "$ ${couponDetails.condition}".`,
     });
   }
 
@@ -288,11 +290,17 @@ exports.applyCouponToUserCart = async (req, res) => {
   })
     .populate("products.product", "_id title price")
     .exec();
-  // console.log("cartTotal", cartTotal, "discount%", validCoupon.discount);
+
+  const hasFreeItem = products.some((item) => item.price === 0);
+  if (hasFreeItem) {
+    return res.json({
+      err: `Coupon not applicable for free items.`,
+    });
+  }
 
   if (cartTotal < parseInt(validCoupon.condition)) {
     return res.json({
-      err: `Cart value should be more then Rs. "${validCoupon.condition}".`,
+      err: `Cart value should be more then "$ ${validCoupon.condition}".`,
     });
   }
 
@@ -466,8 +474,8 @@ exports.order = async (req, res) => {
         model: "Product",
         populate: [
           { path: "category", model: "Category", select: "name slug" },
-          { path: "subs", model: "Sub", select: "name slug" },
-          { path: "subs2", model: "Sub2", select: "name slug" },
+          // { path: "subs", model: "Sub", select: "name slug" },
+          // { path: "subs2", model: "Sub2", select: "name slug" },
         ],
       })
       .exec();
@@ -568,32 +576,12 @@ exports.createCashOrder = async (req, res) => {
   // User Cart checking
   if (!userCart) return res.json({ error: "Cart is Empty" });
 
-  // shipping fee calculation
-  let totalWeight = 0;
-  for (let i = 0; i < userCart.products.length; i++) {
-    let productFromDb = await Product.findById(userCart.products[i].product)
-      .select("weight")
-      .exec();
-    totalWeight =
-      totalWeight + productFromDb.weight * userCart.products[i].count;
-  }
-  let shippingfee = 0;
-  let shippings = await Shipping.find({}).exec();
-  for (let i = 0; i < shippings.length; i++) {
-    if (
-      totalWeight <= shippings[i].weightend &&
-      totalWeight >= shippings[i].weightstart
-    ) {
-      shippingfee = shippings[i].charges;
-    }
-  }
-
   let finalAmount = 0;
 
   if (couponApplied.applied && userCart.totalAfterDiscount) {
     finalAmount = userCart.totalAfterDiscount;
   } else {
-    finalAmount = userCart.cartTotal + shippingfee;
+    finalAmount = userCart.cartTotal + userCart.shippingfee;
   }
 
   let newOrder = await new Order({
@@ -667,30 +655,8 @@ exports.createOrder = async (req, res) => {
   if (couponApplied.applied && userCart.totalAfterDiscount) {
     finalAmount = userCart.totalAfterDiscount;
   } else {
-    finalAmount = userCart.cartTotal;
+    finalAmount = userCart.cartTotal + userCart.shippingfee;
   }
-
-  // shipping fee calculation
-  let totalWeight = 0;
-  for (let i = 0; i < userCart.products.length; i++) {
-    let productFromDb = await Product.findById(userCart.products[i].product)
-      .select("weight")
-      .exec();
-    totalWeight =
-      totalWeight + productFromDb.weight * userCart.products[i].count;
-  }
-  let shippingfee = 0;
-  let shippings = await Shipping.find({}).exec();
-  for (let i = 0; i < shippings.length; i++) {
-    if (
-      totalWeight <= shippings[i].weightend &&
-      totalWeight >= shippings[i].weightstart
-    ) {
-      shippingfee = shippings[i].charges;
-    }
-  }
-
-  finalAmount = finalAmount + shippingfee;
 
   let newOrder = "";
 
