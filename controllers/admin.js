@@ -140,26 +140,14 @@ exports.orderStatus = async (req, res) => {
             }
 
             //shipping re-calculation
-            let totalWeightorignal = 0;
-            for (let i = 0; i < orignalOrder.products.length; i++) {
-              let productFromDb = await Product.findById(
-                orignalOrder.products[i].product
-              )
-                .select("weight")
-                .exec();
-              totalWeightorignal =
-                totalWeightorignal +
-                productFromDb.weight * orignalOrder.products[i].count;
-            }
-
             let shippingfeeorignal = 0;
-            let shippings = await Shipping.find({}).exec();
-            for (let i = 0; i < shippings.length; i++) {
-              if (
-                totalWeightorignal <= shippings[i].weightend &&
-                totalWeightorignal >= shippings[i].weightstart
-              ) {
-                shippingfeeorignal = shippings[i].charges;
+            for (let i = 0; i < orignalOrder.products.length; i++) {
+              const product = orignalOrder.products[i].product;
+              if (product.disprice === 0) {
+                shippingfeeorignal +=
+                  product.shippingcharges * orignalOrder.products[i].count;
+              } else {
+                shippingfeeorignal += product.shippingcharges;
               }
             }
             orignalOrder.shippingfee = shippingfeeorignal;
@@ -275,26 +263,14 @@ exports.orderStatus = async (req, res) => {
             }
 
             //shipping re-calculation
-            let totalWeightorignal = 0;
-            for (let i = 0; i < orignalOrder.products.length; i++) {
-              let productFromDb = await Product.findById(
-                orignalOrder.products[i].product
-              )
-                .select("weight")
-                .exec();
-              totalWeightorignal =
-                totalWeightorignal +
-                productFromDb.weight * orignalOrder.products[i].count;
-            }
-
             let shippingfeeorignal = 0;
-            let shippings = await Shipping.find({}).exec();
-            for (let i = 0; i < shippings.length; i++) {
-              if (
-                totalWeightorignal <= shippings[i].weightend &&
-                totalWeightorignal >= shippings[i].weightstart
-              ) {
-                shippingfeeorignal = shippings[i].charges;
+            for (let i = 0; i < orignalOrder.products.length; i++) {
+              const product = orignalOrder.products[i].product;
+              if (product.disprice === 0) {
+                shippingfeeorignal +=
+                  product.shippingcharges * orignalOrder.products[i].count;
+              } else {
+                shippingfeeorignal += product.shippingcharges;
               }
             }
             orignalOrder.shippingfee = shippingfeeorignal;
@@ -446,29 +422,17 @@ exports.orderStatus = async (req, res) => {
           }
 
           //shipping re-calculation
-          let totalWeight = 0;
+          let shippingfeeclone = 0;
           for (let i = 0; i < clonedOrder.products.length; i++) {
-            let productFromDb = await Product.findById(
-              clonedOrder.products[i].product
-            )
-              .select("weight")
-              .exec();
-            totalWeight =
-              totalWeight +
-              productFromDb.weight * clonedOrder.products[i].count;
-          }
-
-          let shippingfee = 0;
-          let shippings = await Shipping.find({}).exec();
-          for (let i = 0; i < shippings.length; i++) {
-            if (
-              totalWeight <= shippings[i].weightend &&
-              totalWeight >= shippings[i].weightstart
-            ) {
-              shippingfee = shippings[i].charges;
+            const product = clonedOrder.products[i].product;
+            if (product.disprice === 0) {
+              shippingfeeclone +=
+                product.shippingcharges * clonedOrder.products[i].count;
+            } else {
+              shippingfeeclone += product.shippingcharges;
             }
           }
-          clonedOrder.shippingfee = shippingfee;
+          clonedOrder.shippingfee = shippingfeeclone;
 
           // changing the discount and total amount after removing item from orignal order
 
@@ -613,29 +577,17 @@ exports.orderStatus = async (req, res) => {
           }
 
           //shipping re-calculation
-          let totalWeight = 0;
+          let shippingfeeclone = 0;
           for (let i = 0; i < clonedOrder.products.length; i++) {
-            let productFromDb = await Product.findById(
-              clonedOrder.products[i].product
-            )
-              .select("weight")
-              .exec();
-            totalWeight =
-              totalWeight +
-              productFromDb.weight * clonedOrder.products[i].count;
-          }
-
-          let shippingfee = 0;
-          let shippings = await Shipping.find({}).exec();
-          for (let i = 0; i < shippings.length; i++) {
-            if (
-              totalWeight <= shippings[i].weightend &&
-              totalWeight >= shippings[i].weightstart
-            ) {
-              shippingfee = shippings[i].charges;
+            const product = clonedOrder.products[i].product;
+            if (product.disprice === 0) {
+              shippingfeeclone +=
+                product.shippingcharges * clonedOrder.products[i].count;
+            } else {
+              shippingfeeclone += product.shippingcharges;
             }
           }
-          clonedOrder.shippingfee = shippingfee;
+          clonedOrder.shippingfee = shippingfeeclone;
 
           // changing the discount and total amount after removing item from orignal order
           let productsTotal = 0;
@@ -757,26 +709,14 @@ exports.orderUpdate = async (req, res) => {
       );
 
       //shipping re-calculation
-      let totalWeight = 0;
-      for (let i = 0; i < itemupdatedOrder.products.length; i++) {
-        let productFromDb = await Product.findById(
-          itemupdatedOrder.products[i].product
-        )
-          .select("weight")
-          .exec();
-        totalWeight =
-          totalWeight +
-          productFromDb.weight * itemupdatedOrder.products[i].count;
-      }
-
       let shippingfee = 0;
-      let shippings = await Shipping.find({}).exec();
-      for (let i = 0; i < shippings.length; i++) {
-        if (
-          totalWeight <= shippings[i].weightend &&
-          totalWeight >= shippings[i].weightstart
-        ) {
-          shippingfee = shippings[i].charges;
+      for (let i = 0; i < itemupdatedOrder.products.length; i++) {
+        const product = itemupdatedOrder.products[i].product;
+        if (product.disprice === 0) {
+          shippingfee +=
+            product.shippingcharges * itemupdatedOrder.products[i].count;
+        } else {
+          shippingfee += product.shippingcharges;
         }
       }
 
@@ -889,8 +829,8 @@ exports.removeProductandMakeclone = async (req, res) => {
           error: "Item Cannot be removed, as Order's Clone is CashBacked",
         });
       }
-      const prodIdi = new ObjectId(prodId);
       // Find the index of the product to remove
+      const prodIdi = new ObjectId(prodId);
       const productIndex = originalOrder.products.findIndex((product) => {
         return product._id.equals(prodIdi);
       });
@@ -910,8 +850,12 @@ exports.removeProductandMakeclone = async (req, res) => {
       let shippingfeeclone = 0;
       for (let i = 0; i < clonedOrder.products.length; i++) {
         const product = clonedOrder.products[i].product;
-        shippingfeeclone +=
-          product.shippingcharges * clonedOrder.products[i].count;
+        if (product.disprice === 0) {
+          shippingfeeclone +=
+            product.shippingcharges * clonedOrder.products[i].count;
+        } else {
+          shippingfeeclone += product.shippingcharges;
+        }
       }
       clonedOrder.shippingfee = shippingfeeclone;
 
@@ -952,8 +896,12 @@ exports.removeProductandMakeclone = async (req, res) => {
       let shippingfeeorignal = 0;
       for (let i = 0; i < originalOrder.products.length; i++) {
         const product = originalOrder.products[i].product;
-        shippingfeeorignal +=
-          product.shippingcharges * originalOrder.products[i].count;
+        if (product.disprice === 0) {
+          shippingfeeorignal +=
+            product.shippingcharges * originalOrder.products[i].count;
+        } else {
+          shippingfeeorignal += product.shippingcharges;
+        }
       }
       originalOrder.shippingfee = shippingfeeorignal;
 
@@ -1029,13 +977,11 @@ exports.removeProductandMakeclone = async (req, res) => {
         });
       }
 
-      const prodIdi = new ObjectId(prodId);
       // Find the index of the product to remove
+      const prodIdi = new ObjectId(prodId);
       const productIndex = originalOrder.products.findIndex((product) => {
         return product._id.equals(prodIdi);
       });
-      // console.log("productIndex", productIndex);
-      // console.log("prodIdi", new ObjectId(prodIdi));
       if (productIndex === -1) {
         throw new Error("Product not found in order");
       }
@@ -1050,28 +996,17 @@ exports.removeProductandMakeclone = async (req, res) => {
       clonedOrder.products.push(removedProduct);
 
       //shipping re-calculation
-      let totalWeight = 0;
+      let shippingfeeclone = 0;
       for (let i = 0; i < clonedOrder.products.length; i++) {
-        let productFromDb = await Product.findById(
-          clonedOrder.products[i].product
-        )
-          .select("weight")
-          .exec();
-        totalWeight =
-          totalWeight + productFromDb.weight * clonedOrder.products[i].count;
-      }
-
-      let shippingfee = 0;
-      let shippings = await Shipping.find({}).exec();
-      for (let i = 0; i < shippings.length; i++) {
-        if (
-          totalWeight <= shippings[i].weightend &&
-          totalWeight >= shippings[i].weightstart
-        ) {
-          shippingfee = shippings[i].charges;
+        const product = clonedOrder.products[i].product;
+        if (product.disprice === 0) {
+          shippingfeeclone +=
+            product.shippingcharges * clonedOrder.products[i].count;
+        } else {
+          shippingfeeclone += product.shippingcharges;
         }
       }
-      clonedOrder.shippingfee = shippingfee;
+      clonedOrder.shippingfee = shippingfeeclone;
 
       // changing the discount and total amount after removing item from clone order
       let productsTotalvalue = 0;
@@ -1106,25 +1041,14 @@ exports.removeProductandMakeclone = async (req, res) => {
       await clonedOrder.save();
 
       //shipping re-calculation
-      let totalWeightorignal = 0;
+      let shippingfeeorignal = 0;
       for (let i = 0; i < originalOrder.products.length; i++) {
-        let productFromDb = await Product.findById(
-          originalOrder.products[i].product
-        )
-          .select("weight")
-          .exec();
-        totalWeightorignal =
-          totalWeightorignal +
-          productFromDb.weight * originalOrder.products[i].count;
-      }
-
-      let shippingfeeorignal = 0; //here shipping charge fetch line removed, as using above "shippings"
-      for (let i = 0; i < shippings.length; i++) {
-        if (
-          totalWeightorignal <= shippings[i].weightend &&
-          totalWeightorignal >= shippings[i].weightstart
-        ) {
-          shippingfeeorignal = shippings[i].charges;
+        const product = originalOrder.products[i].product;
+        if (product.disprice === 0) {
+          shippingfeeorignal +=
+            product.shippingcharges * originalOrder.products[i].count;
+        } else {
+          shippingfeeorignal += product.shippingcharges;
         }
       }
       originalOrder.shippingfee = shippingfeeorignal;
