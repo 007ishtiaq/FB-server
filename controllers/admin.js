@@ -685,6 +685,7 @@ exports.orderUpdate = async (req, res) => {
     //destructuring from body
     const newCount = form.Quantity;
     const newPrice = form.Price;
+    const newShipping = form.Shipping;
 
     // Find the document and the product you want to update
     const order = await Order.findOne({
@@ -703,6 +704,7 @@ exports.orderUpdate = async (req, res) => {
           $set: {
             "products.$.count": newCount,
             "products.$.price": newPrice,
+            "products.$.product.shippingcharges": newShipping,
           },
         },
         { new: true }
@@ -727,7 +729,7 @@ exports.orderUpdate = async (req, res) => {
         },
         {
           $set: {
-            shippingfee: form.Shipping > 0 ? form.Shipping : shippingfee,
+            shippingfee: shippingfee,
           },
         },
         { new: true }
@@ -795,7 +797,6 @@ exports.removeProductandMakeclone = async (req, res) => {
 
   try {
     const foundOrder = await Order.findById(id);
-    console.log("foundOrder.orderStatus", foundOrder.orderStatus);
 
     if (
       foundOrder.orderStatus === "Cancelled" ||
@@ -873,7 +874,6 @@ exports.removeProductandMakeclone = async (req, res) => {
           (productsTotalvalue * clonedOrder.paymentIntent.dispercent) / 100;
       }
 
-      console.log("discountedamt", discountedamt);
       // Update amount and discount in clonedOrder
       let dispercent = clonedOrder.paymentIntent.dispercent;
       let currency = clonedOrder.paymentIntent.currency;
@@ -986,9 +986,7 @@ exports.removeProductandMakeclone = async (req, res) => {
         throw new Error("Product not found in order");
       }
       // Remove the product from the original order
-      console.log("originalOrder", originalOrder);
       const removedProduct = originalOrder.products.splice(productIndex, 1)[0];
-      console.log("originalOrder", originalOrder);
 
       // Remove _id from removedProduct
       delete removedProduct._id;
