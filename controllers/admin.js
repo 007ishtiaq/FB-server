@@ -25,7 +25,6 @@ exports.orders = async (req, res) => {
     ],
   })
     .sort("createdAt")
-    .populate("products.product")
     .populate("orderdBy")
     .exec();
 
@@ -38,7 +37,6 @@ exports.rejectedOrders = async (req, res) => {
     orderStatus: "Cancelled",
   })
     .sort("-createdAt")
-    .populate("products.product")
     .populate("orderdBy")
     .exec();
 
@@ -53,7 +51,6 @@ exports.completedOrders = async (req, res) => {
     ],
   })
     .sort("-createdAt")
-    .populate("products.product")
     .populate("orderdBy")
     .exec();
 
@@ -64,7 +61,6 @@ exports.returnedOrders = async (req, res) => {
     orderStatus: "Returned",
   })
     .sort("-createdAt")
-    .populate("products.product")
     .populate("orderdBy")
     .exec();
 
@@ -856,8 +852,11 @@ exports.orderUpdate = async (req, res) => {
 
 exports.removeProductandMakeclone = async (req, res) => {
   const { id, prodId } = req.body;
+
   try {
     const foundOrder = await Order.findById(id);
+    console.log("foundOrder.orderStatus", foundOrder.orderStatus);
+
     if (
       foundOrder.orderStatus === "Cancelled" ||
       foundOrder.orderStatus === "Returned"
@@ -875,6 +874,7 @@ exports.removeProductandMakeclone = async (req, res) => {
       if (!originalOrder) {
         throw new Error("Order not found");
       }
+
       // Check if clone order already exists
       let clonedOrder = await Order.findOne({ _id: originalOrder.CloneId });
       if (!clonedOrder) {
@@ -889,43 +889,31 @@ exports.removeProductandMakeclone = async (req, res) => {
           error: "Item Cannot be removed, as Order's Clone is CashBacked",
         });
       }
+      const prodIdi = new ObjectId(prodId);
       // Find the index of the product to remove
-      const productIndex = originalOrder.products.findIndex(
-        (product) => product._id.toString() === prodId.toString()
-      );
+      const productIndex = originalOrder.products.findIndex((product) => {
+        return product._id.equals(prodIdi);
+      });
+
       if (productIndex === -1) {
         throw new Error("Product not found in order");
       }
       // Remove the product from the original order
       const removedProduct = originalOrder.products.splice(productIndex, 1)[0];
+
       // Remove _id from removedProduct
       delete removedProduct._id;
       // Add the removed product to the products array of the cloned order
       clonedOrder.products.push(removedProduct);
 
       //shipping re-calculation
-      let totalWeight = 0;
+      let shippingfeeclone = 0;
       for (let i = 0; i < clonedOrder.products.length; i++) {
-        let productFromDb = await Product.findById(
-          clonedOrder.products[i].product
-        )
-          .select("weight")
-          .exec();
-        totalWeight =
-          totalWeight + productFromDb.weight * clonedOrder.products[i].count;
+        const product = clonedOrder.products[i].product;
+        shippingfeeclone +=
+          product.shippingcharges * clonedOrder.products[i].count;
       }
-
-      let shippingfee = 0;
-      let shippings = await Shipping.find({}).exec();
-      for (let i = 0; i < shippings.length; i++) {
-        if (
-          totalWeight <= shippings[i].weightend &&
-          totalWeight >= shippings[i].weightstart
-        ) {
-          shippingfee = shippings[i].charges;
-        }
-      }
-      clonedOrder.shippingfee = shippingfee;
+      clonedOrder.shippingfee = shippingfeeclone;
 
       // changing the discount and total amount after removing item from clone order
       let productsTotalvalue = 0;
@@ -941,6 +929,7 @@ exports.removeProductandMakeclone = async (req, res) => {
           (productsTotalvalue * clonedOrder.paymentIntent.dispercent) / 100;
       }
 
+      console.log("discountedamt", discountedamt);
       // Update amount and discount in clonedOrder
       let dispercent = clonedOrder.paymentIntent.dispercent;
       let currency = clonedOrder.paymentIntent.currency;
@@ -960,26 +949,11 @@ exports.removeProductandMakeclone = async (req, res) => {
       await clonedOrder.save();
 
       //shipping re-calculation
-      let totalWeightorignal = 0;
+      let shippingfeeorignal = 0;
       for (let i = 0; i < originalOrder.products.length; i++) {
-        let productFromDb = await Product.findById(
-          originalOrder.products[i].product
-        )
-          .select("weight")
-          .exec();
-        totalWeightorignal =
-          totalWeightorignal +
-          productFromDb.weight * originalOrder.products[i].count;
-      }
-
-      let shippingfeeorignal = 0; //here shipping charge fetch line removed, as using above "shippings"
-      for (let i = 0; i < shippings.length; i++) {
-        if (
-          totalWeightorignal <= shippings[i].weightend &&
-          totalWeightorignal >= shippings[i].weightstart
-        ) {
-          shippingfeeorignal = shippings[i].charges;
-        }
+        const product = originalOrder.products[i].product;
+        shippingfeeorignal +=
+          product.shippingcharges * originalOrder.products[i].count;
       }
       originalOrder.shippingfee = shippingfeeorignal;
 
@@ -1054,15 +1028,22 @@ exports.removeProductandMakeclone = async (req, res) => {
           error: "Item Cannot be removed, as Order's Clone is CashBacked",
         });
       }
+
+      const prodIdi = new ObjectId(prodId);
       // Find the index of the product to remove
-      const productIndex = originalOrder.products.findIndex(
-        (product) => product._id.toString() === prodId.toString()
-      );
+      const productIndex = originalOrder.products.findIndex((product) => {
+        return product._id.equals(prodIdi);
+      });
+      // console.log("productIndex", productIndex);
+      // console.log("prodIdi", new ObjectId(prodIdi));
       if (productIndex === -1) {
         throw new Error("Product not found in order");
       }
       // Remove the product from the original order
+      console.log("originalOrder", originalOrder);
       const removedProduct = originalOrder.products.splice(productIndex, 1)[0];
+      console.log("originalOrder", originalOrder);
+
       // Remove _id from removedProduct
       delete removedProduct._id;
       // Add the removed product to the products array of the cloned order

@@ -229,9 +229,7 @@ exports.couponValidation = async (req, res) => {
   const user = await User.findOne({ email: req.user.email }).exec();
   let { cartTotal, products } = await Cart.findOne({
     orderdBy: user._id,
-  })
-    .populate("products.product", "_id title price")
-    .exec();
+  }).exec();
 
   // console.log("cart in coupon validation", products);
 
@@ -287,9 +285,7 @@ exports.applyCouponToUserCart = async (req, res) => {
   // taking user cart total to check min value of card
   let { products, cartTotal, shippingfee } = await Cart.findOne({
     orderdBy: user._id,
-  })
-    .populate("products.product", "_id title price")
-    .exec();
+  }).exec();
 
   const hasFreeItem = products.some((item) => item.price === 0);
   if (hasFreeItem) {
@@ -377,7 +373,6 @@ exports.orders = async (req, res) => {
     let user = await User.findOne({ email: req.user.email }).exec();
 
     let userOrders = await Order.find({ orderdBy: user._id })
-      .populate("products.product")
       .sort([["createdAt", "desc"]])
       .exec();
 
@@ -411,7 +406,6 @@ exports.cancelledorders = async (req, res) => {
       orderdBy: user._id,
       orderStatus: "Cancelled",
     })
-      .populate("products.product")
       .sort([["createdAt", "desc"]])
       .exec();
 
@@ -444,7 +438,6 @@ exports.returnedorders = async (req, res) => {
       orderdBy: user._id,
       orderStatus: "Returned",
     })
-      .populate("products.product")
       .sort([["createdAt", "desc"]])
       .exec();
 
@@ -468,17 +461,7 @@ exports.returnedorders = async (req, res) => {
 
 exports.order = async (req, res) => {
   try {
-    const myOrder = await Order.findById(req.params.id)
-      .populate({
-        path: "products.product",
-        model: "Product",
-        populate: [
-          { path: "category", model: "Category", select: "name slug" },
-          // { path: "subs", model: "Sub", select: "name slug" },
-          // { path: "subs2", model: "Sub2", select: "name slug" },
-        ],
-      })
-      .exec();
+    const myOrder = await Order.findById(req.params.id).exec();
 
     res.json(myOrder);
   } catch (error) {
@@ -571,7 +554,13 @@ exports.createCashOrder = async (req, res) => {
 
   const user = await User.findOne({ email: req.user.email }).exec();
 
-  let userCart = await Cart.findOne({ orderdBy: user._id }).exec();
+  const userCart = await Cart.findOne({ orderdBy: user._id })
+    .populate({
+      path: "products.product",
+      model: "Product",
+      populate: [{ path: "category", model: "Category", select: "name slug" }],
+    })
+    .exec();
 
   // User Cart checking
   if (!userCart) return res.json({ error: "Cart is Empty" });
@@ -645,7 +634,13 @@ exports.createOrder = async (req, res) => {
 
   const user = await User.findOne({ email: req.user.email }).exec();
 
-  let userCart = await Cart.findOne({ orderdBy: user._id }).exec();
+  const userCart = await Cart.findOne({ orderdBy: user._id })
+    .populate({
+      path: "products.product",
+      model: "Product",
+      populate: [{ path: "category", model: "Category", select: "name slug" }],
+    })
+    .exec();
 
   // User Cart checking
   if (!userCart) return res.json({ error: "Cart is Empty" });
