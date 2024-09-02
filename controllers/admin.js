@@ -695,7 +695,7 @@ exports.orderUpdate = async (req, res) => {
 
     // inside order product price and count updation;
     if (order) {
-      const itemupdatedOrder = await Order.findOneAndUpdate(
+      let itemupdatedOrder = await Order.findOneAndUpdate(
         {
           _id: new ObjectId(orderId),
           "products._id": new ObjectId(prodId),
@@ -719,6 +719,7 @@ exports.orderUpdate = async (req, res) => {
             product.shippingcharges * itemupdatedOrder.products[i].count;
         } else {
           shippingfee += product.shippingcharges;
+          console.log("product.disprice", product.disprice);
         }
       }
 
@@ -735,7 +736,7 @@ exports.orderUpdate = async (req, res) => {
         { new: true }
       );
 
-      // changing the discount and total amound after edit item qty or price
+      // changing the discount and total amound after edit item qty | price or shipping
       let productsTotal = 0;
       for (let i = 0; i < shippingupdatedOrder.products.length; i++) {
         productsTotal =
@@ -745,9 +746,21 @@ exports.orderUpdate = async (req, res) => {
       }
 
       let discounted = "";
-      if (shippingupdatedOrder.paymentIntent.dispercent) {
-        discounted =
-          (productsTotal * shippingupdatedOrder.paymentIntent.dispercent) / 100;
+      if (shippingupdatedOrder.paymentIntent.discountType) {
+        // in case of discount in persentage
+        if (shippingupdatedOrder.paymentIntent.discountType === "Discount") {
+          discounted =
+            (productsTotal * shippingupdatedOrder.paymentIntent.dispercent) /
+            100;
+        }
+        // in case of discount in cash
+        if (shippingupdatedOrder.paymentIntent.discountType === "Cash") {
+          discounted = shippingupdatedOrder.paymentIntent.dispercent;
+        }
+        // in case of discount in shipping fee
+        if (shippingupdatedOrder.paymentIntent.discountType === "Shipping") {
+          discounted = shippingupdatedOrder.shippingfee;
+        }
       }
 
       const updatedOrder = await Order.findOneAndUpdate(
