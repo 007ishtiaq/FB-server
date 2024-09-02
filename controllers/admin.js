@@ -687,6 +687,18 @@ exports.orderUpdate = async (req, res) => {
     const newPrice = form.Price;
     const newShipping = form.Shipping;
 
+    let targetedOrder = await Order.findOne({
+      _id: new ObjectId(orderId),
+      "products._id": new ObjectId(prodId),
+    });
+
+    // restriction on 0 price items (free item) if coupon is already applied
+    if (newPrice == 0 && targetedOrder.paymentIntent.discounted > 1) {
+      return res.json({
+        error: `Free Item on this order not Allow, Coupon applied on the order.`,
+      });
+    }
+
     // Find the document and the product you want to update
     const order = await Order.findOne({
       _id: new ObjectId(orderId),
@@ -719,7 +731,6 @@ exports.orderUpdate = async (req, res) => {
             product.shippingcharges * itemupdatedOrder.products[i].count;
         } else {
           shippingfee += product.shippingcharges;
-          console.log("product.disprice", product.disprice);
         }
       }
 
