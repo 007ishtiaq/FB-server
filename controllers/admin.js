@@ -100,11 +100,22 @@ exports.orderStatus = async (req, res) => {
                 productsTotal +
                 foundOrder.products[i].price * foundOrder.products[i].count;
             }
-
+            foundOrder;
             let discounted = "";
-            if (foundOrder.paymentIntent.dispercent) {
-              discounted =
-                (productsTotal * foundOrder.paymentIntent.dispercent) / 100;
+            if (foundOrder.paymentIntent.discountType) {
+              // in case of discount in persentage
+              if (foundOrder.paymentIntent.discountType === "Discount") {
+                discounted =
+                  (productsTotal * foundOrder.paymentIntent.dispercent) / 100;
+              }
+              // in case of discount in cash
+              if (foundOrder.paymentIntent.discountType === "Cash") {
+                discounted = foundOrder.paymentIntent.dispercent;
+              }
+              // in case of discount in shipping fee
+              if (foundOrder.paymentIntent.discountType === "Shipping") {
+                discounted = foundOrder.shippingfee;
+              }
             }
 
             let updatedOrder = await Order.findByIdAndUpdate(
@@ -162,13 +173,25 @@ exports.orderStatus = async (req, res) => {
             }
 
             let discounted = "";
-            if (orignalOrder.paymentIntent.dispercent) {
-              discounted =
-                (productsTotal * orignalOrder.paymentIntent.dispercent) / 100;
+            if (orignalOrder.paymentIntent.discountType) {
+              // in case of discount in persentage
+              if (orignalOrder.paymentIntent.discountType === "Discount") {
+                discounted =
+                  (productsTotal * orignalOrder.paymentIntent.dispercent) / 100;
+              }
+              // in case of discount in cash
+              if (orignalOrder.paymentIntent.discountType === "Cash") {
+                discounted = orignalOrder.paymentIntent.dispercent;
+              }
+              // in case of discount in shipping fee
+              if (orignalOrder.paymentIntent.discountType === "Shipping") {
+                discounted = orignalOrder.shippingfee;
+              }
             }
 
             // Update amount and discount in originalOrder
             let dispercent = orignalOrder.paymentIntent.dispercent;
+            let discountType = orignalOrder.paymentIntent.discountType;
             let currency = orignalOrder.paymentIntent.currency;
             let created = orignalOrder.paymentIntent.created;
             orignalOrder.paymentIntent = {};
@@ -176,6 +199,7 @@ exports.orderStatus = async (req, res) => {
               productsTotal - discounted + orignalOrder.shippingfee;
             orignalOrder.paymentIntent.discounted = discounted;
             orignalOrder.paymentIntent.dispercent = dispercent;
+            orignalOrder.paymentIntent.discountType = discountType;
             orignalOrder.paymentIntent.currency = currency;
             orignalOrder.paymentIntent.created = created;
 
@@ -224,9 +248,20 @@ exports.orderStatus = async (req, res) => {
             }
 
             let discounted = "";
-            if (foundOrder.paymentIntent.dispercent) {
-              discounted =
-                (productsTotal * foundOrder.paymentIntent.dispercent) / 100;
+            if (foundOrder.paymentIntent.discountType) {
+              // in case of discount in persentage
+              if (foundOrder.paymentIntent.discountType === "Discount") {
+                discounted =
+                  (productsTotal * foundOrder.paymentIntent.dispercent) / 100;
+              }
+              // in case of discount in cash
+              if (foundOrder.paymentIntent.discountType === "Cash") {
+                discounted = foundOrder.paymentIntent.dispercent;
+              }
+              // in case of discount in shipping fee
+              if (foundOrder.paymentIntent.discountType === "Shipping") {
+                discounted = foundOrder.shippingfee;
+              }
             }
 
             let updatedOrder = await Order.findByIdAndUpdate(
@@ -284,13 +319,25 @@ exports.orderStatus = async (req, res) => {
             }
 
             let discounted = "";
-            if (orignalOrder.paymentIntent.dispercent) {
-              discounted =
-                (productsTotal * orignalOrder.paymentIntent.dispercent) / 100;
+            if (orignalOrder.paymentIntent.discountType) {
+              // in case of discount in persentage
+              if (orignalOrder.paymentIntent.discountType === "Discount") {
+                discounted =
+                  (productsTotal * orignalOrder.paymentIntent.dispercent) / 100;
+              }
+              // in case of discount in cash
+              if (orignalOrder.paymentIntent.discountType === "Cash") {
+                discounted = orignalOrder.paymentIntent.dispercent;
+              }
+              // in case of discount in shipping fee
+              if (orignalOrder.paymentIntent.discountType === "Shipping") {
+                discounted = orignalOrder.shippingfee;
+              }
             }
 
             // Update amount and discount in originalOrder
             let dispercent = orignalOrder.paymentIntent.dispercent;
+            let discountType = orignalOrder.paymentIntent.discountType;
             let currency = orignalOrder.paymentIntent.currency;
             let created = orignalOrder.paymentIntent.created;
             orignalOrder.paymentIntent = {};
@@ -298,6 +345,7 @@ exports.orderStatus = async (req, res) => {
               productsTotal - discounted + orignalOrder.shippingfee;
             orignalOrder.paymentIntent.discounted = discounted;
             orignalOrder.paymentIntent.dispercent = dispercent;
+            orignalOrder.paymentIntent.discountType = discountType;
             orignalOrder.paymentIntent.currency = currency;
             orignalOrder.paymentIntent.created = created;
 
@@ -379,9 +427,20 @@ exports.orderStatus = async (req, res) => {
           }
 
           let discounted = "";
-          if (foundOrder.paymentIntent.dispercent) {
-            discounted =
-              (productsTotal * foundOrder.paymentIntent.dispercent) / 100;
+          if (foundOrder.paymentIntent.discountType) {
+            // in case of discount in persentage
+            if (foundOrder.paymentIntent.discountType === "Discount") {
+              discounted =
+                (productsTotal * foundOrder.paymentIntent.dispercent) / 100;
+            }
+            // in case of discount in cash
+            if (foundOrder.paymentIntent.discountType === "Cash") {
+              discounted = foundOrder.paymentIntent.dispercent;
+            }
+            // in case of discount in shipping fee
+            if (foundOrder.paymentIntent.discountType === "Shipping") {
+              discounted = foundOrder.shippingfee;
+            }
           }
 
           let updatedOrder = await Order.findByIdAndUpdate(
@@ -444,13 +503,25 @@ exports.orderStatus = async (req, res) => {
           }
 
           let discounted = "";
-          if (clonedOrder.paymentIntent.dispercent) {
-            discounted =
-              (productsTotal * clonedOrder.paymentIntent.dispercent) / 100;
+          if (clonedOrder.paymentIntent.discountType) {
+            // in case of discount in persentage
+            if (clonedOrder.paymentIntent.discountType === "Discount") {
+              discounted =
+                (productsTotal * clonedOrder.paymentIntent.dispercent) / 100;
+            }
+            // in case of discount in cash
+            if (clonedOrder.paymentIntent.discountType === "Cash") {
+              discounted = clonedOrder.paymentIntent.dispercent;
+            }
+            // in case of discount in shipping fee
+            if (clonedOrder.paymentIntent.discountType === "Shipping") {
+              discounted = clonedOrder.shippingfee;
+            }
           }
 
           // Update amount and discount in originalOrder
           let dispercent = clonedOrder.paymentIntent.dispercent;
+          let discountType = clonedOrder.paymentIntent.discountType;
           let currency = clonedOrder.paymentIntent.currency;
           let created = clonedOrder.paymentIntent.created;
           clonedOrder.paymentIntent = {};
@@ -458,6 +529,7 @@ exports.orderStatus = async (req, res) => {
             productsTotal - discounted + clonedOrder.shippingfee;
           clonedOrder.paymentIntent.discounted = discounted;
           clonedOrder.paymentIntent.dispercent = dispercent;
+          clonedOrder.paymentIntent.discountType = discountType;
           clonedOrder.paymentIntent.currency = currency;
           clonedOrder.paymentIntent.created = created;
 
@@ -534,9 +606,20 @@ exports.orderStatus = async (req, res) => {
           }
 
           let discounted = "";
-          if (foundOrder.paymentIntent.dispercent) {
-            discounted =
-              (productsTotal * foundOrder.paymentIntent.dispercent) / 100;
+          if (foundOrder.paymentIntent.discountType) {
+            // in case of discount in persentage
+            if (foundOrder.paymentIntent.discountType === "Discount") {
+              discounted =
+                (productsTotal * foundOrder.paymentIntent.dispercent) / 100;
+            }
+            // in case of discount in cash
+            if (foundOrder.paymentIntent.discountType === "Cash") {
+              discounted = foundOrder.paymentIntent.dispercent;
+            }
+            // in case of discount in shipping fee
+            if (foundOrder.paymentIntent.discountType === "Shipping") {
+              discounted = foundOrder.shippingfee;
+            }
           }
 
           let updatedOrder = await Order.findByIdAndUpdate(
@@ -598,13 +681,25 @@ exports.orderStatus = async (req, res) => {
           }
 
           let discounted = "";
-          if (clonedOrder.paymentIntent.dispercent) {
-            discounted =
-              (productsTotal * clonedOrder.paymentIntent.dispercent) / 100;
+          if (clonedOrder.paymentIntent.discountType) {
+            // in case of discount in persentage
+            if (clonedOrder.paymentIntent.discountType === "Discount") {
+              discounted =
+                (productsTotal * clonedOrder.paymentIntent.dispercent) / 100;
+            }
+            // in case of discount in cash
+            if (clonedOrder.paymentIntent.discountType === "Cash") {
+              discounted = clonedOrder.paymentIntent.dispercent;
+            }
+            // in case of discount in shipping fee
+            if (clonedOrder.paymentIntent.discountType === "Shipping") {
+              discounted = clonedOrder.shippingfee;
+            }
           }
 
           // Update amount and discount in originalOrder
           let dispercent = clonedOrder.paymentIntent.dispercent;
+          let discountType = clonedOrder.paymentIntent.discountType;
           let currency = clonedOrder.paymentIntent.currency;
           let created = clonedOrder.paymentIntent.created;
           clonedOrder.paymentIntent = {};
@@ -612,6 +707,7 @@ exports.orderStatus = async (req, res) => {
             productsTotal - discounted + clonedOrder.shippingfee;
           clonedOrder.paymentIntent.discounted = discounted;
           clonedOrder.paymentIntent.dispercent = dispercent;
+          clonedOrder.paymentIntent.discountType = discountType;
           clonedOrder.paymentIntent.currency = currency;
           clonedOrder.paymentIntent.created = created;
 
@@ -897,7 +993,6 @@ exports.removeProductandMakeclone = async (req, res) => {
       if (clonedOrder.paymentIntent.discountType) {
         // in case of discount in persentage
         if (clonedOrder.paymentIntent.discountType === "Discount") {
-          // console.log("clonedOrder type is Discount");
           discountedamt =
             (productsTotalvalue * clonedOrder.paymentIntent.dispercent) / 100;
         }
@@ -1065,13 +1160,26 @@ exports.removeProductandMakeclone = async (req, res) => {
       }
 
       let discountedamt = "";
-      if (clonedOrder.paymentIntent.dispercent) {
-        discountedamt =
-          (productsTotalvalue * clonedOrder.paymentIntent.dispercent) / 100;
+      if (clonedOrder.paymentIntent.discountType) {
+        // in case of discount in persentage
+        if (clonedOrder.paymentIntent.discountType === "Discount") {
+          // console.log("clonedOrder type is Discount");
+          discountedamt =
+            (productsTotalvalue * clonedOrder.paymentIntent.dispercent) / 100;
+        }
+        // in case of discount in cash
+        if (clonedOrder.paymentIntent.discountType === "Cash") {
+          discountedamt = clonedOrder.paymentIntent.dispercent;
+        }
+        // in case of discount in shipping fee
+        if (clonedOrder.paymentIntent.discountType === "Shipping") {
+          discountedamt = clonedOrder.shippingfee;
+        }
       }
 
       // Update amount and discount in clonedOrder
       let dispercent = clonedOrder.paymentIntent.dispercent;
+      let discountType = clonedOrder.paymentIntent.discountType;
       let currency = clonedOrder.paymentIntent.currency;
       let created = clonedOrder.paymentIntent.created;
       clonedOrder.paymentIntent = {};
@@ -1079,6 +1187,7 @@ exports.removeProductandMakeclone = async (req, res) => {
         productsTotalvalue - discountedamt + clonedOrder.shippingfee;
       clonedOrder.paymentIntent.discounted = discountedamt;
       clonedOrder.paymentIntent.dispercent = dispercent;
+      clonedOrder.paymentIntent.discountType = discountType;
       clonedOrder.paymentIntent.currency = currency;
       clonedOrder.paymentIntent.created = created;
 
@@ -1110,9 +1219,20 @@ exports.removeProductandMakeclone = async (req, res) => {
       }
 
       let discounted = "";
-      if (originalOrder.paymentIntent.dispercent) {
-        discounted =
-          (productsTotal * originalOrder.paymentIntent.dispercent) / 100;
+      if (originalOrder.paymentIntent.discountType) {
+        // in case of discount in persentage
+        if (originalOrder.paymentIntent.discountType === "Discount") {
+          discounted =
+            (productsTotal * originalOrder.paymentIntent.dispercent) / 100;
+        }
+        // in case of discount in cash
+        if (originalOrder.paymentIntent.discountType === "Cash") {
+          discounted = originalOrder.paymentIntent.dispercent;
+        }
+        // in case of discount in shipping fee
+        if (originalOrder.paymentIntent.discountType === "Shipping") {
+          discounted = originalOrder.shippingfee;
+        }
       }
 
       // Update amount and discount in originalOrder
