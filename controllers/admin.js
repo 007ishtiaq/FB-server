@@ -854,6 +854,7 @@ exports.removeProductandMakeclone = async (req, res) => {
           error: "Item Cannot be removed, as Order's Clone is CashBacked",
         });
       }
+
       // Find the index of the product to remove
       const prodIdi = new ObjectId(prodId);
       const productIndex = originalOrder.products.findIndex((product) => {
@@ -893,13 +894,26 @@ exports.removeProductandMakeclone = async (req, res) => {
       }
 
       let discountedamt = "";
-      if (clonedOrder.paymentIntent.dispercent) {
-        discountedamt =
-          (productsTotalvalue * clonedOrder.paymentIntent.dispercent) / 100;
+      if (clonedOrder.paymentIntent.discountType) {
+        // in case of discount in persentage
+        if (clonedOrder.paymentIntent.discountType === "Discount") {
+          // console.log("clonedOrder type is Discount");
+          discountedamt =
+            (productsTotalvalue * clonedOrder.paymentIntent.dispercent) / 100;
+        }
+        // in case of discount in cash
+        if (clonedOrder.paymentIntent.discountType === "Cash") {
+          discountedamt = clonedOrder.paymentIntent.dispercent;
+        }
+        // in case of discount in shipping fee
+        if (clonedOrder.paymentIntent.discountType === "Shipping") {
+          discountedamt = clonedOrder.shippingfee;
+        }
       }
 
       // Update amount and discount in clonedOrder
       let dispercent = clonedOrder.paymentIntent.dispercent;
+      let discountType = clonedOrder.paymentIntent.discountType;
       let currency = clonedOrder.paymentIntent.currency;
       let created = clonedOrder.paymentIntent.created;
       clonedOrder.paymentIntent = {};
@@ -907,6 +921,7 @@ exports.removeProductandMakeclone = async (req, res) => {
         productsTotalvalue - discountedamt + clonedOrder.shippingfee;
       clonedOrder.paymentIntent.discounted = discountedamt;
       clonedOrder.paymentIntent.dispercent = dispercent;
+      clonedOrder.paymentIntent.discountType = discountType;
       clonedOrder.paymentIntent.currency = currency;
       clonedOrder.paymentIntent.created = created;
 
@@ -938,9 +953,20 @@ exports.removeProductandMakeclone = async (req, res) => {
       }
 
       let discounted = "";
-      if (originalOrder.paymentIntent.dispercent) {
-        discounted =
-          (productsTotal * originalOrder.paymentIntent.dispercent) / 100;
+      if (originalOrder.paymentIntent.discountType) {
+        // in case of discount in persentage
+        if (originalOrder.paymentIntent.discountType === "Discount") {
+          discounted =
+            (productsTotal * originalOrder.paymentIntent.dispercent) / 100;
+        }
+        // in case of discount in cash
+        if (originalOrder.paymentIntent.discountType === "Cash") {
+          discounted = originalOrder.paymentIntent.dispercent;
+        }
+        // in case of discount in shipping fee
+        if (originalOrder.paymentIntent.discountType === "Shipping") {
+          discounted = originalOrder.shippingfee;
+        }
       }
 
       // Update amount and discount in originalOrder
