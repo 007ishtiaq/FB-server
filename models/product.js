@@ -74,10 +74,6 @@ const productSchema = new mongoose.Schema(
     images: {
       type: Array,
     },
-    shipping: {
-      type: String,
-      enum: ["Yes", "No"],
-    },
     color: {
       type: String,
     },
