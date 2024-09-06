@@ -606,7 +606,7 @@ exports.createCashOrder = async (req, res) => {
   // email sending using mailgun
   mailgun.messages().send(
     {
-      from: "ApplianceBazar <appliancebazar@mg.mydomain.com>",
+      from: "Mailgun Sandbox <postmaster@sandbox0a14e2140a714152ba19622ba631e6cc.mailgun.org>",
       to: `${user.name} <${req.user.email}>`,
       subject: `New Order ${newOrder.OrderId}`,
       html: orderReceipttemplate(newOrder, user),

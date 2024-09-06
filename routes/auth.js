@@ -8,8 +8,10 @@ const { authCheck, adminCheck, expiryCheck } = require("../middlewares/auth");
 // import
 const {
   createOrUpdateUser,
-  createOrUpdatePhoneUser,
+  // createOrUpdatePhoneUser,
   currentUser,
+  sendOTP,
+  verifyOTP,
 } = require("../controllers/auth");
 
 router.post(
@@ -21,5 +23,7 @@ router.post(
 // router.post("/create-or-update-phone-user", expiryCheck, authCheck, createOrUpdatePhoneUser);
 router.post("/current-user", expiryCheck, authCheck, currentUser);
 router.post("/current-admin", expiryCheck, authCheck, adminCheck, currentUser);
+router.post("/send-otp", expiryCheck, sendOTP);
+router.post("/verify-otp", expiryCheck, verifyOTP);
 
 module.exports = router;

@@ -1,5 +1,16 @@
 const mg = require("mailgun-js");
+const nodemailer = require("nodemailer");
 
+// Create a transporter using Mailjet's SMTP
+const transporter = nodemailer.createTransport({
+  service: "Mailjet",
+  auth: {
+    user: process.env.MAILJET_API_KEY,
+    pass: process.env.MAILJET_SECRET_KEY,
+  },
+});
+
+// Configuration of mailgun's SMTP
 const mailgun = mg({
   apiKey: process.env.MAILGUN_API_KEY,
   domain: process.env.MAILGUN_DOMAIN,
@@ -75,4 +86,4 @@ const orderReceipttemplate = (newOrder, user) => {
     `;
 };
 
-module.exports = { mailgun, orderReceipttemplate };
+module.exports = { transporter, mailgun, orderReceipttemplate };
