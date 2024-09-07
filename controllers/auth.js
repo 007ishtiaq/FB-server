@@ -78,7 +78,6 @@ exports.sendOTP = async (req, res) => {
     });
 
     await otpVerification.save();
-    console.log("initializing otp process", email);
 
     // Email content
     const mailOptions = {
@@ -108,28 +107,28 @@ exports.verifyOTP = async (req, res) => {
 
     if (!otpRecord) {
       return res.status(400).json({
-        err: "OTP not found or expired.",
+        err: "OTP not found or expired",
       });
     }
 
     // Check if OTP has expired
     if (new Date() > otpRecord.expiredAt) {
-      return res.status(400).json({ err: "OTP has expired." });
+      return res.status(400).json({ err: "OTP has expired" });
     }
 
     // Compare the OTP provided by the user with the hashed OTP
     const isMatch = await bcrypt.compare(otp.toString(), otpRecord.otp);
 
     if (!isMatch) {
-      return res.status(400).json({ err: "Invalid OTP." });
+      return res.status(400).json({ err: "Invalid OTP" });
     }
 
-    res.status(200).json({ message: "OTP verified successfully." });
+    res.status(200).json({ message: "OTP verified successfully" });
 
     // Optionally, delete the OTP record after verification
     await OtpVerification.deleteOne({ userEmail: email });
   } catch (error) {
     console.error("Error verifying OTP:", error);
-    res.status(500).json({ error: "Failed to verify OTP." });
+    res.status(500).json({ error: "Failed to verify OTP" });
   }
 };
