@@ -6,6 +6,9 @@ const Productreturn = require("../models/productreturn");
 const Ledger = require("../models/ledger");
 const Shipping = require("../models/shipping");
 const { transporter, orderReceipttemplate } = require("../middlewares/utils");
+const fs = require("fs");
+const path = require("path");
+const PDFDocument = require("pdfkit");
 
 const {
   Types: { ObjectId },
@@ -1540,6 +1543,174 @@ exports.deleteOrder = async (req, res) => {
   }
 };
 
+// Function to generate PDF
+const generateInvoicePDF = (order) => {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 50 });
+    const pdfPath = path.join(__dirname, "invoice.pdf");
+    const writeStream = fs.createWriteStream(pdfPath);
+
+    doc.pipe(writeStream);
+
+    // Header
+    doc
+      .fontSize(9)
+      .fillColor("grey")
+      .text(`Print Date: ${new Date().toLocaleString()}`, {
+        align: "right",
+      });
+    doc.moveDown();
+
+    // Add logo
+    const logoPath = path.join(__dirname, "invoiceLogo.png");
+    doc.image(logoPath, { fit: [200, 40] });
+    doc.moveDown();
+
+    // Company Information
+    doc.fontSize(10).fillColor("#3a4553").text("Phone: 0300-1234567");
+    doc.text("Email: Billing@Pearlytouch.com");
+    doc.moveDown();
+
+    // Customer Info
+    doc
+      .fontSize(11)
+      .fillColor("white")
+      .rect(50, doc.y, 200, 20)
+      .fill("#787878")
+      .text("Bill To", 55, doc.y + 5);
+    doc.moveDown(2);
+
+    doc
+      .fontSize(10)
+      .fillColor("#3a4553")
+      .text(`Name: ${order?.shippingto?.Name}`);
+    doc.text(`Contact: ${order?.shippingto?.Contact}`);
+    doc.text(`Email: ${order?.email}`);
+    doc.text(
+      `Address: ${order?.shippingto?.Address}, ${order?.shippingto?.Province}, ${order?.shippingto?.Area}, ${order?.shippingto?.LandMark}, ${order?.shippingto?.City}`
+    );
+    doc.moveDown(2);
+
+    // Table Header
+    doc
+      .fillColor("white")
+      .fontSize(11)
+      .rect(50, doc.y, 500, 20)
+      .fill("#787878");
+    doc.text("Description", 55, doc.y + 5, { continued: true, width: 250 });
+    doc.text("Quantity", 305, doc.y + 5, {
+      continued: true,
+      width: 100,
+      align: "center",
+    });
+    doc.text("Price", 405, doc.y + 5, {
+      continued: true,
+      width: 100,
+      align: "center",
+    });
+    doc.text("Amount", 505, doc.y + 5, { width: 100, align: "center" });
+    doc.moveDown(2);
+
+    // Table Rows (Products)
+    doc.fontSize(10).fillColor("#3a4553");
+    order.products.forEach((item) => {
+      doc.text(
+        `${item.product.title} - Brand: ${item.product.brand} - Color: ${item.color}`,
+        55,
+        doc.y,
+        { continued: true, width: 250 }
+      );
+      doc.text(item.count.toString(), 305, doc.y, {
+        continued: true,
+        width: 100,
+        align: "center",
+      });
+      doc.text(`Rs. ${item.price}`, 405, doc.y, {
+        continued: true,
+        width: 100,
+        align: "center",
+      });
+      doc.text(`Rs. ${item.price * item.count}`, 505, doc.y, {
+        width: 100,
+        align: "center",
+      });
+      doc.moveDown(1);
+    });
+    doc.moveDown(1);
+
+    // Discount (if available)
+    if (order?.paymentIntent?.dispercent != null) {
+      const discountText =
+        order.paymentIntent.discountType === "Discount"
+          ? `${order.paymentIntent.dispercent}%`
+          : order.paymentIntent.discountType === "Cash"
+          ? `Rs. ${order.paymentIntent.dispercent}`
+          : "Shipping discount";
+
+      doc
+        .fontSize(11)
+        .fillColor("#787878")
+        .text(`Discount (${discountText} off coupon used): `, 55, doc.y, {
+          continued: true,
+          width: 400,
+        });
+      doc.text(`(${order.paymentIntent.discounted})`, { align: "right" });
+      doc.moveDown(1);
+    }
+
+    // Shipping Charges
+    doc
+      .fontSize(11)
+      .fillColor("#787878")
+      .text("Shipping Charges:", 55, doc.y, { continued: true, width: 400 });
+    doc.text(`Rs. ${order?.shippingfee}`, { align: "right" });
+    doc.moveDown(1);
+
+    // Total Amount
+    doc
+      .fontSize(11)
+      .fillColor("white")
+      .rect(50, doc.y, 500, 20)
+      .fill("#787878");
+    doc.text("Total Amount:", 55, doc.y + 5, { continued: true, width: 400 });
+    doc.text(`Rs. ${order?.paymentIntent?.amount}.00`, { align: "right" });
+    doc.moveDown(2);
+
+    // Order Information
+    doc
+      .fontSize(11)
+      .fillColor("white")
+      .rect(50, doc.y, 200, 20)
+      .fill("#787878")
+      .text("Order Information", 55, doc.y + 5);
+    doc.moveDown(2);
+
+    doc.fontSize(10).fillColor("#3a4553").text(`Order ID: ${order?.OrderId}`);
+    doc.text(`Placed On: ${new Date(order?.createdAt).toLocaleString()}`);
+    doc.text(`Order Status: ${order?.orderStatus}`);
+    doc.text(`Mode of Payment: ${order?.paymentStatus}`);
+    doc.text(`Payment Status: ${order?.isPaid ? "Paid" : "Unpaid"}`);
+    doc.moveDown(3);
+
+    // Footer
+    doc
+      .fontSize(10)
+      .fillColor("#616161")
+      .text("Thank you for shopping with us", { align: "center" });
+
+    // Finalize PDF file
+    doc.end();
+
+    writeStream.on("finish", () => {
+      resolve(pdfPath);
+    });
+
+    writeStream.on("error", (err) => {
+      reject(err);
+    });
+  });
+};
+
 exports.sendInvoiceToEmail = async (req, res) => {
   const { id } = req.body;
 
@@ -1551,26 +1722,71 @@ exports.sendInvoiceToEmail = async (req, res) => {
       return res.status(404).json({ error: "Order not found" });
     }
 
+    // Generate the PDF
+    const pdfPath = await generateInvoicePDF(order);
+
     // Email content
-    // const mailOptions = {
-    //   from: "Your App <ishtiaqahmad427427@gmail.com>",
-    //   to: order.email,
-    //   subject: `Order Invoice "${order.OrderId}"`,
-    //   html: orderReceipttemplate(order),
-    // };
+    const mailOptions = {
+      from: "Your App <ishtiaqahmad427427@gmail.com>",
+      to: order.email,
+      subject: `Order Invoice "${order.OrderId}"`,
+      html: orderReceipttemplate(order),
+      attachments: [
+        {
+          filename: "invoice.pdf",
+          path: pdfPath,
+          contentType: "application/pdf",
+        },
+      ],
+    };
 
     // Send email using Mailjet
-    // await transporter.sendMail(mailOptions);
-
-    // console.log("invoice", orderReceipttemplate(order));
+    await transporter.sendMail(mailOptions);
 
     // Send success response
-    res.status(200).json({ message: "Invoice email sent successfully" });
+    res
+      .status(200)
+      .json({ message: "Invoice email sent successfully with PDF" });
+
+    // Clean up the PDF file after sending the email
+    fs.unlinkSync(pdfPath); // Delete the file if you no longer need it
   } catch (error) {
     console.error("Error sending Invoice Email:", error);
     res.status(500).json({ error: "Failed to send Invoice email" });
   }
 };
+
+// exports.sendInvoiceToEmail = async (req, res) => {
+//   const { id } = req.body;
+
+//   try {
+//     // Fetch the order from the database using the id
+//     const order = await Order.findById(id);
+
+//     if (!order) {
+//       return res.status(404).json({ error: "Order not found" });
+//     }
+
+//     // Email content
+//     const mailOptions = {
+//       from: "Your App <ishtiaqahmad427427@gmail.com>",
+//       to: order.email,
+//       subject: `Order Invoice "${order.OrderId}"`,
+//       html: orderReceipttemplate(order),
+//     };
+
+//     // Send email using Mailjet
+//     await transporter.sendMail(mailOptions);
+
+//     // console.log("invoice", orderReceipttemplate(order));
+
+//     // Send success response
+//     res.status(200).json({ message: "Invoice email sent successfully" });
+//   } catch (error) {
+//     console.error("Error sending Invoice Email:", error);
+//     res.status(500).json({ error: "Failed to send Invoice email" });
+//   }
+// };
 
 exports.flashData = async (req, res) => {
   try {

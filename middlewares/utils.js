@@ -27,7 +27,7 @@ const orderReceipttemplate = (newOrder) => {
   const discountRow = newOrder.paymentIntent.discounted
     ? `<tr>
      <td colspan="2">Discount:</td>
-     <td style="text-align: right;">-$${newOrder.paymentIntent.discounted}</td>
+     <td style="text-align: right;">-$(${newOrder.paymentIntent.discounted})</td>
    </tr>`
     : "";
 
@@ -59,10 +59,9 @@ const orderReceipttemplate = (newOrder) => {
       )
       .join("\n")}
       </tbody>
-
       <tfoot>
       <tr>
-      <td colspan="2">Items Price:</td>
+      <td colspan="2">Sub Total:</td>
       <td style="text-align: right;"> $${getTotal()}</td>
       </tr>
       <tr>
