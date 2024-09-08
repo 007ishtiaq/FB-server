@@ -13,6 +13,8 @@ exports.createOrUpdateUser = async (req, res) => {
     { new: true }
   );
   if (user) {
+    // Remove all previously saved OTPs for this email
+    await OtpVerification.deleteMany({ userEmail: email });
     // console.log("USER UPDATED", user);
     res.json(user);
   } else {
@@ -21,6 +23,8 @@ exports.createOrUpdateUser = async (req, res) => {
       name: updatedName,
       picture,
     }).save();
+    // Remove all previously saved OTPs for this email
+    await OtpVerification.deleteMany({ userEmail: email });
     // console.log("USER CREATED", newUser);
     res.json(newUser);
   }
@@ -55,47 +59,62 @@ exports.currentUser = async (req, res) => {
 exports.sendOTP = async (req, res) => {
   const { email } = req.body;
 
+  // Check if the email is valid
+  function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+  }
+
+  if (!validateEmail(email)) {
+    console.log("Invalid or undeliverable email address");
+  }
+
   // Check if user exists in your database
   const user = await User.findOne({ email });
-  // if (user) {
-  //   return res.status(400).json({ error: "User already exists" });
-  // } else {
-  // Generate a random 6-digit OTP
+  if (user) {
+    return res
+      .status(400)
+      .json({ error: "User already exists with provided email" });
+  } else {
+    // Generate a random 6-digit OTP
 
-  const otp = Math.floor(1000 + Math.random() * 9000);
-  const saltRounds = 10;
+    const otp = Math.floor(1000 + Math.random() * 9000);
+    const saltRounds = 10;
 
-  try {
-    // Hash the OTP before saving it to the database
-    const hashedOtp = await bcrypt.hash(otp.toString(), saltRounds);
+    try {
+      // Remove all previously saved OTPs for this email
+      await OtpVerification.deleteMany({ userEmail: email });
 
-    // Save the OTP with email and timestamps in your database
-    const otpVerification = new OtpVerification({
-      userEmail: email,
-      otp: hashedOtp,
-      createdAt: new Date(),
-      expiredAt: new Date(Date.now() + 10 * 60 * 1000), // OTP expires in 10 minutes
-    });
+      // Hash the OTP before saving it to the database
+      const hashedOtp = await bcrypt.hash(otp.toString(), saltRounds);
 
-    await otpVerification.save();
+      // Save the OTP with email and timestamps in your database
+      const otpVerification = new OtpVerification({
+        userEmail: email,
+        otp: hashedOtp,
+        createdAt: new Date(),
+        expiredAt: new Date(Date.now() + 10 * 60 * 1000), // OTP expires in 10 minutes
+      });
 
-    // Email content
-    const mailOptions = {
-      from: "Your App <ishtiaqahmad427427@gmail.com>",
-      to: email,
-      subject: "Your OTP Code",
-      text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
-    };
+      await otpVerification.save();
 
-    // Send email using Mailjet
-    await transporter.sendMail(mailOptions);
+      // Email content
+      const mailOptions = {
+        from: "Your App <ishtiaqahmad427427@gmail.com>",
+        to: email,
+        subject: "Your OTP Code",
+        text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
+      };
 
-    res.status(200).json({ message: "OTP sent successfully" });
-  } catch (error) {
-    console.error("Error sending OTP:", error);
-    res.status(500).json({ error: "Failed to send OTP email" });
+      // Send email using Mailjet
+      await transporter.sendMail(mailOptions);
+
+      res.status(200).json({ message: "OTP sent successfully" });
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      res.status(500).json({ error: "Failed to send OTP email" });
+    }
   }
-  // }
 };
 
 exports.verifyOTP = async (req, res) => {
@@ -125,10 +144,40 @@ exports.verifyOTP = async (req, res) => {
 
     res.status(200).json({ message: "OTP verified successfully" });
 
-    // Optionally, delete the OTP record after verification
-    await OtpVerification.deleteOne({ userEmail: email });
+    // Update the `isVerified` field to `true`
+    otpRecord.isVerified = true;
+    await otpRecord.save(); // Save the updated record
   } catch (error) {
     console.error("Error verifying OTP:", error);
     res.status(500).json({ error: "Failed to verify OTP" });
+  }
+};
+
+exports.getOTPRecord = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    // Find the OTP record for the email
+    const otpRecord = await OtpVerification.findOne({ userEmail: email });
+
+    if (!otpRecord) {
+      return res
+        .status(400)
+        .json({ message: "No OTP record found for this email." });
+    }
+
+    // Send the OTP record to the frontend
+    res.status(200).json({
+      message: "OTP record retrieved successfully.",
+      otpRecord: {
+        email: otpRecord.userEmail,
+        isVerified: otpRecord.isVerified,
+        createdAt: otpRecord.createdAt,
+        expiredAt: otpRecord.expiredAt,
+      },
+    });
+  } catch (error) {
+    console.error("Error retrieving OTP record:", error);
+    res.status(500).json({ error: "Failed to retrieve OTP record." });
   }
 };

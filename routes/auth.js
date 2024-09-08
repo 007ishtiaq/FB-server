@@ -12,6 +12,7 @@ const {
   currentUser,
   sendOTP,
   verifyOTP,
+  getOTPRecord,
 } = require("../controllers/auth");
 
 router.post(
@@ -25,5 +26,6 @@ router.post("/current-user", expiryCheck, authCheck, currentUser);
 router.post("/current-admin", expiryCheck, authCheck, adminCheck, currentUser);
 router.post("/send-otp", expiryCheck, sendOTP);
 router.post("/verify-otp", expiryCheck, verifyOTP);
+router.post("/otpinfo", expiryCheck, getOTPRecord);
 
 module.exports = router;

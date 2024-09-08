@@ -86,4 +86,8 @@ const orderReceipttemplate = (newOrder, user) => {
     `;
 };
 
-module.exports = { transporter, mailgun, orderReceipttemplate };
+module.exports = {
+  transporter,
+  mailgun,
+  orderReceipttemplate,
+};
