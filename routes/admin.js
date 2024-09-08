@@ -25,6 +25,7 @@ const {
   makeEntry,
   deleteEntry,
   allratings,
+  deleteOrder,
 } = require("../controllers/admin");
 
 // routes
@@ -79,6 +80,14 @@ router.put(
   authCheck,
   adminCheck,
   removeProductandMakeclone
+);
+
+router.put(
+  "/admin/order/delete",
+  expiryCheck,
+  authCheck,
+  adminCheck,
+  deleteOrder
 );
 
 // Product Action Info cancel or return

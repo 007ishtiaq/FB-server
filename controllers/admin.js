@@ -1514,6 +1514,30 @@ exports.deleteEntry = async (req, res) => {
   }
 };
 
+exports.deleteOrder = async (req, res) => {
+  const { id } = req.body;
+
+  try {
+    // Find and delete the order by its ID
+    const deletedOrder = await Order.findByIdAndDelete(id);
+
+    // If the order was not found, return an error message
+    if (!deletedOrder) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
+    }
+
+    // Respond with success if the order was deleted
+    res.json({ success: true, message: "Order deleted successfully" });
+  } catch (err) {
+    // Handle errors (e.g., invalid ID format or database errors)
+    res
+      .status(400)
+      .json({ success: false, message: "Failed to delete the order" });
+  }
+};
+
 exports.flashData = async (req, res) => {
   try {
     const products = await Product.find({ onSale: "Yes" })
