@@ -1,9 +1,11 @@
+const User = require("../models/user");
 const Product = require("../models/product");
 const Order = require("../models/order");
 const Productcancel = require("../models/productcancel");
 const Productreturn = require("../models/productreturn");
 const Ledger = require("../models/ledger");
 const Shipping = require("../models/shipping");
+const { transporter, orderReceipttemplate } = require("../middlewares/utils");
 
 const {
   Types: { ObjectId },
@@ -1535,6 +1537,38 @@ exports.deleteOrder = async (req, res) => {
     res
       .status(400)
       .json({ success: false, message: "Failed to delete the order" });
+  }
+};
+
+exports.sendInvoiceToEmail = async (req, res) => {
+  const { id } = req.body;
+
+  try {
+    // Fetch the order from the database using the id
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Email content
+    // const mailOptions = {
+    //   from: "Your App <ishtiaqahmad427427@gmail.com>",
+    //   to: order.email,
+    //   subject: `Order Invoice "${order.OrderId}"`,
+    //   html: orderReceipttemplate(order),
+    // };
+
+    // Send email using Mailjet
+    // await transporter.sendMail(mailOptions);
+
+    // console.log("invoice", orderReceipttemplate(order));
+
+    // Send success response
+    res.status(200).json({ message: "Invoice email sent successfully" });
+  } catch (error) {
+    console.error("Error sending Invoice Email:", error);
+    res.status(500).json({ error: "Failed to send Invoice email" });
   }
 };
 

@@ -26,6 +26,7 @@ const {
   deleteEntry,
   allratings,
   deleteOrder,
+  sendInvoiceToEmail,
 } = require("../controllers/admin");
 
 // routes
@@ -88,6 +89,14 @@ router.put(
   authCheck,
   adminCheck,
   deleteOrder
+);
+
+router.put(
+  "/admin/sendInvoice",
+  expiryCheck,
+  authCheck,
+  adminCheck,
+  sendInvoiceToEmail
 );
 
 // Product Action Info cancel or return

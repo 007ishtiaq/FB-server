@@ -16,9 +16,23 @@ const mailgun = mg({
   domain: process.env.MAILGUN_DOMAIN,
 });
 
-const orderReceipttemplate = (newOrder, user) => {
+const orderReceipttemplate = (newOrder) => {
+  const getTotal = () => {
+    return newOrder.products.reduce((currentValue, nextValue) => {
+      return currentValue + nextValue.count * nextValue.price;
+    }, 0);
+  };
+
+  // Conditionally create the discount row if discount exists
+  const discountRow = newOrder.paymentIntent.discounted
+    ? `<tr>
+     <td colspan="2">Discount:</td>
+     <td style="text-align: right;">-$${newOrder.paymentIntent.discounted}</td>
+   </tr>`
+    : "";
+
   return `<h1> Thanks for shopping with us </h1>
-    <p> Hi ${user.name}, </p>
+    <p> Hi ${newOrder.shippingto.Name}, </p>
     <p>We have finished processing your order.</p>
     <h2>[Order ID ${newOrder.OrderId}] (${newOrder.createdAt
     .toString()
@@ -27,8 +41,8 @@ const orderReceipttemplate = (newOrder, user) => {
     <thead>
     <tr>
     <td><strong>Product</strong></td>
-    <td><strong>Quantity</strong></td>
-    <td><strong align="right">Price</strong></td>
+    <td style="text-align: center;"><strong>Quantity</strong></td>
+    <td style="text-align: right;"><strong>Price</strong></td>
     </tr>
     </thead>
 
@@ -38,8 +52,8 @@ const orderReceipttemplate = (newOrder, user) => {
         (p) => `
       <tr>
       <td>${p.product.title}</td>
-      <td align="center">${p.count}</td>
-      <td align="right"> $${p.price}</td>
+      <td style="text-align: center;">${p.count}</td>
+      <td style="text-align: right;"> $${p.price}</td>
       </tr>
     `
       )
@@ -49,23 +63,26 @@ const orderReceipttemplate = (newOrder, user) => {
       <tfoot>
       <tr>
       <td colspan="2">Items Price:</td>
-      <td align="right"> $${"Items Price 000"}</td>
+      <td style="text-align: right;"> $${getTotal()}</td>
       </tr>
       <tr>
       <td colspan="2">Tax Price:</td>
-      <td align="right"> $${"Tax price 000"}</td>
+      <td style="text-align: right;"> $${"0"}</td>
       </tr>
       <tr>
-      <td colspan="2">Shipping Price:</td>
-      <td align="right"> $${"Shipping price 000"}</td>
+      <td colspan="2">Shipping Charges:</td>
+      <td style="text-align: right;"> $${newOrder.shippingfee}</td>
       </tr>
+       ${discountRow}
       <tr>
       <td colspan="2"><strong>Total Price:</strong></td>
-      <td align="right"><strong> $${"Total price 000"}</strong></td>
+      <td style="text-align: right;"><strong> $${
+        newOrder.paymentIntent.amount
+      }</strong></td>
       </tr>
       <tr>
       <td colspan="2">Payment Method:</td>
-      <td align="right">${newOrder.paymentStatus}</td>
+      <td style="text-align: right;">${newOrder.paymentStatus}</td>
       </tr>
       </tfoot>
       </table>

@@ -1,5 +1,5 @@
 const User = require("../models/user");
-const { mailgun, transporter } = require("../middlewares/utils");
+const { transporter } = require("../middlewares/utils");
 const OtpVerification = require("../models/otp");
 const bcrypt = require("bcrypt");
 
