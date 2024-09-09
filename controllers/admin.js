@@ -1564,28 +1564,36 @@ const generateInvoicePDF = (order) => {
     // Add logo
     const logoPath = path.join(__dirname, "invoiceLogo.png");
     doc.image(logoPath, { fit: [200, 40] });
-    doc.moveDown();
+    doc.moveDown(4);
 
     // Company Information
-    doc.fontSize(10).fillColor("#3a4553").text("Phone: 0300-1234567");
-    doc.text("Email: Billing@Pearlytouch.com");
-    doc.moveDown();
+    doc
+      .fontSize(10)
+      .fillColor("#3a4553")
+      .text("Phone: 0300-1234567", 55, doc.y);
+    doc.moveDown(0.3);
+    doc.text("Email: Billing@Pearlytouch.com", 55, doc.y);
+    doc.moveDown(2);
 
     // Customer Info
+    // Set background color
+    doc.fillColor("white").rect(50, doc.y, 200, 20).fill("#787878"); // Background color
+    // Change text color and write the text
     doc
+      .fillColor("white") // Set the text color
       .fontSize(11)
-      .fillColor("white")
-      .rect(50, doc.y, 200, 20)
-      .fill("#787878")
       .text("Bill To", 55, doc.y + 5);
-    doc.moveDown(2);
+    doc.moveDown();
 
     doc
       .fontSize(10)
       .fillColor("#3a4553")
       .text(`Name: ${order?.shippingto?.Name}`);
+    doc.moveDown(0.3);
     doc.text(`Contact: ${order?.shippingto?.Contact}`);
+    doc.moveDown(0.3);
     doc.text(`Email: ${order?.email}`);
+    doc.moveDown(0.3);
     doc.text(
       `Address: ${order?.shippingto?.Address}, ${order?.shippingto?.Province}, ${order?.shippingto?.Area}, ${order?.shippingto?.LandMark}, ${order?.shippingto?.City}`
     );
@@ -1595,21 +1603,16 @@ const generateInvoicePDF = (order) => {
     doc
       .fillColor("white")
       .fontSize(11)
-      .rect(50, doc.y, 500, 20)
+      .rect(50, doc.y, 515, 20)
       .fill("#787878");
-    doc.text("Description", 55, doc.y + 5, { continued: true, width: 250 });
-    doc.text("Quantity", 305, doc.y + 5, {
-      continued: true,
-      width: 100,
-      align: "center",
-    });
-    doc.text("Price", 405, doc.y + 5, {
-      continued: true,
-      width: 100,
-      align: "center",
-    });
-    doc.text("Amount", 505, doc.y + 5, { width: 100, align: "center" });
-    doc.moveDown(2);
+    // Set text color to white and properly align each header column
+    doc
+      .fillColor("white")
+      .text("Description", 55, doc.y + 5, { width: 100, align: "left" }) // Adjust x-coordinate for Description
+      .text("Quantity", 350, doc.y - 13, { width: 50, align: "center" }) // Adjust x-coordinate for Quantity
+      .text("Price", 425, doc.y - 12, { width: 50, align: "center" }) // Adjust x-coordinate for Price
+      .text("Amount", 500, doc.y - 13, { width: 50, align: "center" }); // Adjust x-coordinate for Amount
+    doc.moveDown(1);
 
     // Table Rows (Products)
     doc.fontSize(10).fillColor("#3a4553");
@@ -1618,25 +1621,25 @@ const generateInvoicePDF = (order) => {
         `${item.product.title} - Brand: ${item.product.brand} - Color: ${item.color}`,
         55,
         doc.y,
-        { continued: true, width: 250 }
+        // { continued: true, width: 350 }
+        { width: 325, align: "left" }
       );
-      doc.text(item.count.toString(), 305, doc.y, {
+      doc.text(item.count.toString(), 325, doc.y - 11, {
         continued: true,
         width: 100,
         align: "center",
       });
-      doc.text(`Rs. ${item.price}`, 405, doc.y, {
+      doc.text(`${item.price}`, 400, doc.y, {
         continued: true,
         width: 100,
         align: "center",
       });
-      doc.text(`Rs. ${item.price * item.count}`, 505, doc.y, {
+      doc.text(`${item.price * item.count}`, 465, doc.y, {
         width: 100,
         align: "center",
       });
-      doc.moveDown(1);
+      doc.moveDown(0.7);
     });
-    doc.moveDown(1);
 
     // Discount (if available)
     if (order?.paymentIntent?.dispercent != null) {
@@ -1648,8 +1651,8 @@ const generateInvoicePDF = (order) => {
           : "Shipping discount";
 
       doc
-        .fontSize(11)
-        .fillColor("#787878")
+        .fontSize(10)
+        .fillColor("#3a4553")
         .text(`Discount (${discountText} off coupon used): `, 55, doc.y, {
           continued: true,
           width: 400,
@@ -1660,10 +1663,10 @@ const generateInvoicePDF = (order) => {
 
     // Shipping Charges
     doc
-      .fontSize(11)
-      .fillColor("#787878")
+      .fontSize(10)
+      .fillColor("#3a4553")
       .text("Shipping Charges:", 55, doc.y, { continued: true, width: 400 });
-    doc.text(`Rs. ${order?.shippingfee}`, { align: "right" });
+    doc.text(`${order?.shippingfee}`, { align: "right" });
     doc.moveDown(1);
 
     // Total Amount
@@ -1686,9 +1689,13 @@ const generateInvoicePDF = (order) => {
     doc.moveDown(2);
 
     doc.fontSize(10).fillColor("#3a4553").text(`Order ID: ${order?.OrderId}`);
+    doc.moveDown(0.3);
     doc.text(`Placed On: ${new Date(order?.createdAt).toLocaleString()}`);
+    doc.moveDown(0.3);
     doc.text(`Order Status: ${order?.orderStatus}`);
+    doc.moveDown(0.3);
     doc.text(`Mode of Payment: ${order?.paymentStatus}`);
+    doc.moveDown(0.3);
     doc.text(`Payment Status: ${order?.isPaid ? "Paid" : "Unpaid"}`);
     doc.moveDown(3);
 
@@ -1726,22 +1733,22 @@ exports.sendInvoiceToEmail = async (req, res) => {
     const pdfPath = await generateInvoicePDF(order);
 
     // Email content
-    const mailOptions = {
-      from: "Your App <ishtiaqahmad427427@gmail.com>",
-      to: order.email,
-      subject: `Order Invoice "${order.OrderId}"`,
-      html: orderReceipttemplate(order),
-      attachments: [
-        {
-          filename: "invoice.pdf",
-          path: pdfPath,
-          contentType: "application/pdf",
-        },
-      ],
-    };
+    // const mailOptions = {
+    //   from: "Your App <ishtiaqahmad427427@gmail.com>",
+    //   to: order.email,
+    //   subject: `Order Invoice "${order.OrderId}"`,
+    //   html: orderReceipttemplate(order),
+    //   attachments: [
+    //     {
+    //       filename: "invoice.pdf",
+    //       path: pdfPath,
+    //       contentType: "application/pdf",
+    //     },
+    //   ],
+    // };
 
     // Send email using Mailjet
-    await transporter.sendMail(mailOptions);
+    // await transporter.sendMail(mailOptions);
 
     // Send success response
     res
@@ -1749,7 +1756,7 @@ exports.sendInvoiceToEmail = async (req, res) => {
       .json({ message: "Invoice email sent successfully with PDF" });
 
     // Clean up the PDF file after sending the email
-    fs.unlinkSync(pdfPath); // Delete the file if you no longer need it
+    // fs.unlinkSync(pdfPath);
   } catch (error) {
     console.error("Error sending Invoice Email:", error);
     res.status(500).json({ error: "Failed to send Invoice email" });
