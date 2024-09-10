@@ -1564,20 +1564,20 @@ const generateInvoicePDF = (order) => {
     // Add logo
     const logoPath = path.join(__dirname, "invoiceLogo.png");
     doc.image(logoPath, { fit: [200, 40] });
-    doc.moveDown(4);
+    doc.moveDown(3.5);
 
     // Company Information
     doc
       .fontSize(10)
       .fillColor("#3a4553")
-      .text("Phone: 0300-1234567", 55, doc.y);
+      .text("Phone: 0300-1234567", 82, doc.y);
     doc.moveDown(0.3);
-    doc.text("Email: Billing@Pearlytouch.com", 55, doc.y);
+    doc.text("Email: Billing@Pearlytouch.com", 82, doc.y);
     doc.moveDown(2);
 
     // Customer Info
     // Set background color
-    doc.fillColor("white").rect(50, doc.y, 200, 20).fill("#787878"); // Background color
+    doc.fillColor("white").rect(50, doc.y, 200, 18).fill("#787878"); // Background color
     // Change text color and write the text
     doc
       .fillColor("white") // Set the text color
@@ -1654,39 +1654,52 @@ const generateInvoicePDF = (order) => {
         .fontSize(10)
         .fillColor("#3a4553")
         .text(`Discount (${discountText} off coupon used): `, 55, doc.y, {
-          continued: true,
-          width: 400,
+          width: 325,
+          align: "left",
         });
-      doc.text(`(${order.paymentIntent.discounted})`, { align: "right" });
-      doc.moveDown(1);
+      doc.text(`-(${order.paymentIntent.discounted})`, 477, doc.y - 11, {
+        width: 100,
+        align: "center",
+      });
+
+      doc.moveDown(0.7);
     }
 
     // Shipping Charges
-    doc
-      .fontSize(10)
-      .fillColor("#3a4553")
-      .text("Shipping Charges:", 55, doc.y, { continued: true, width: 400 });
-    doc.text(`${order?.shippingfee}`, { align: "right" });
-    doc.moveDown(1);
+    doc.fontSize(10).fillColor("#3a4553").text("Shipping Charges:", 55, doc.y, {
+      width: 325,
+      align: "left",
+    });
+    doc.text(`${order?.shippingfee}`, 479, doc.y - 11, {
+      width: 100,
+      align: "center",
+    });
+
+    doc.moveDown(0.7);
 
     // Total Amount
     doc
       .fontSize(11)
       .fillColor("white")
-      .rect(50, doc.y, 500, 20)
+      .rect(50, doc.y, 515, 20)
       .fill("#787878");
-    doc.text("Total Amount:", 55, doc.y + 5, { continued: true, width: 400 });
-    doc.text(`Rs. ${order?.paymentIntent?.amount}.00`, { align: "right" });
-    doc.moveDown(2);
+
+    doc
+      .fillColor("white")
+      .text("Total Amount:", 55, doc.y + 5, { continued: true, width: 500 });
+    doc.text(`$ ${order?.paymentIntent?.amount}.00`, { align: "right" });
+
+    doc.moveDown(3);
 
     // Order Information
+    // Set background color
+    doc.fillColor("white").rect(50, doc.y, 200, 18).fill("#787878"); // Background color
+    // Change text color and write the text
     doc
+      .fillColor("white") // Set the text color
       .fontSize(11)
-      .fillColor("white")
-      .rect(50, doc.y, 200, 20)
-      .fill("#787878")
       .text("Order Information", 55, doc.y + 5);
-    doc.moveDown(2);
+    doc.moveDown();
 
     doc.fontSize(10).fillColor("#3a4553").text(`Order ID: ${order?.OrderId}`);
     doc.moveDown(0.3);
