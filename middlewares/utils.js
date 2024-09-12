@@ -1,4 +1,3 @@
-const mg = require("mailgun-js");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
@@ -13,12 +12,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Configuration of mailgun's SMTP
-const mailgun = mg({
-  apiKey: process.env.MAILGUN_API_KEY,
-  domain: process.env.MAILGUN_DOMAIN,
-});
-
 const orderReceipttemplate = (newOrder) => {
   const getTotal = () => {
     return newOrder.products.reduce((currentValue, nextValue) => {
@@ -30,7 +23,9 @@ const orderReceipttemplate = (newOrder) => {
   const discountRow = newOrder.paymentIntent.discounted
     ? `<tr>
      <td colspan="2">Discount:</td>
-     <td style="text-align: right;">-$(${newOrder.paymentIntent.discounted})</td>
+     <td style="text-align: right;">-$(${newOrder.paymentIntent.discounted.toFixed(
+       2
+     )})</td>
    </tr>`
     : "";
 
@@ -57,7 +52,7 @@ const orderReceipttemplate = (newOrder) => {
       <tr>
       <td>${p.product.title}</td>
       <td style="text-align: center;">${p.count}</td>
-      <td style="text-align: right;"> $${p.price}</td>
+      <td style="text-align: right;"> $${p.price.toFixed(2)}</td>
       </tr>
     `
       )
@@ -66,22 +61,22 @@ const orderReceipttemplate = (newOrder) => {
       <tfoot>
       <tr>
       <td colspan="2">Sub Total:</td>
-      <td style="text-align: right;"> $${getTotal()}</td>
+      <td style="text-align: right;"> $${getTotal().toFixed(2)}</td>
       </tr>
       <tr>
       <td colspan="2">Tax Price:</td>
-      <td style="text-align: right;"> $${"0"}</td>
+      <td style="text-align: right;"> $${"0.00"}</td>
       </tr>
       <tr>
       <td colspan="2">Shipping Charges:</td>
-      <td style="text-align: right;"> $${newOrder.shippingfee}</td>
+      <td style="text-align: right;"> $${newOrder.shippingfee.toFixed(2)}</td>
       </tr>
        ${discountRow}
       <tr>
       <td colspan="2"><strong>Total Price:</strong></td>
-      <td style="text-align: right;"><strong> $${
-        newOrder.paymentIntent.amount
-      }</strong></td>
+      <td style="text-align: right;"><strong> $${newOrder.paymentIntent.amount.toFixed(
+        2
+      )}</strong></td>
       </tr>
       <tr>
       <td colspan="2">Payment Method:</td>
@@ -192,11 +187,11 @@ const generateInvoicePDF = (order) => {
         width: 100,
         align: "center",
       });
-      doc.text(`${item.price}`, 400, doc.y - 12, {
+      doc.text(`${item.price.toFixed(2)}`, 400, doc.y - 12, {
         width: 100,
         align: "center",
       });
-      doc.text(`${item.price * item.count}`, 475, doc.y - 12, {
+      doc.text(`${(item.price * item.count).toFixed(2)}`, 475, doc.y - 12, {
         width: 100,
         align: "center",
       });
@@ -209,8 +204,8 @@ const generateInvoicePDF = (order) => {
         order.paymentIntent.discountType === "Discount"
           ? `${order.paymentIntent.dispercent}%`
           : order.paymentIntent.discountType === "Cash"
-          ? `Rs. ${order.paymentIntent.dispercent}`
-          : "Shipping discount";
+          ? `$ ${order.paymentIntent.dispercent}`
+          : "Shipping";
 
       doc
         .fontSize(10)
@@ -219,10 +214,15 @@ const generateInvoicePDF = (order) => {
           width: 325,
           align: "left",
         });
-      doc.text(`-(${order.paymentIntent.discounted})`, 477, doc.y - 11, {
-        width: 100,
-        align: "center",
-      });
+      doc.text(
+        `-(${order.paymentIntent.discounted.toFixed(2)})`,
+        474,
+        doc.y - 11,
+        {
+          width: 100,
+          align: "center",
+        }
+      );
 
       doc.moveDown(0.7);
     }
@@ -232,7 +232,7 @@ const generateInvoicePDF = (order) => {
       width: 325,
       align: "left",
     });
-    doc.text(`${order?.shippingfee}`, 475, doc.y - 11, {
+    doc.text(`${order?.shippingfee.toFixed(2)}`, 475, doc.y - 11, {
       width: 100,
       align: "center",
     });
@@ -249,7 +249,9 @@ const generateInvoicePDF = (order) => {
     doc
       .fillColor("white")
       .text("Total Amount:", 55, doc.y + 5, { continued: true, width: 495 });
-    doc.text(`$ ${order?.paymentIntent?.amount}.00`, { align: "right" });
+    doc.text(`$ ${order?.paymentIntent?.amount.toFixed(2)}`, {
+      align: "right",
+    });
 
     doc.moveDown(3);
 
@@ -295,7 +297,6 @@ const generateInvoicePDF = (order) => {
 
 module.exports = {
   transporter,
-  mailgun,
   orderReceipttemplate,
   generateInvoicePDF,
 };

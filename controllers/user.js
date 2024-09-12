@@ -8,7 +8,6 @@ const Shipping = require("../models/shipping");
 const EmailOptIn = require("../models/optinEmail");
 const Productcancel = require("../models/productcancel");
 const Productreturn = require("../models/productreturn");
-const { mailgun, orderReceipttemplate } = require("../middlewares/utils");
 const Ledger = require("../models/ledger");
 const moment = require("moment");
 
@@ -603,22 +602,7 @@ exports.createCashOrder = async (req, res) => {
 
   let updated = await Product.bulkWrite(bulkOption, {});
 
-  // email sending using mailgun
-  mailgun.messages().send(
-    {
-      from: "Mailgun Sandbox <postmaster@sandbox0a14e2140a714152ba19622ba631e6cc.mailgun.org>",
-      to: `${user.name} <${req.user.email}>`,
-      subject: `New Order ${newOrder.OrderId}`,
-      html: orderReceipttemplate(newOrder, user),
-    },
-    (error, body) => {
-      if (error) {
-        console.log(error);
-      } else {
-        console.log(body);
-      }
-    }
-  );
+  // email sending using mailjet
 
   res.json({ orderId: newOrder.OrderId });
 };

@@ -1563,11 +1563,11 @@ exports.sendInvoiceToEmail = async (req, res) => {
     const mailOptions = {
       from: "Your App <ishtiaqahmad427427@gmail.com>",
       to: order.email,
-      subject: `Order Invoice "${order.OrderId}"`,
+      subject: `Order Invoice "ID: ${order.OrderId}"`,
       html: orderReceipttemplate(order),
       attachments: [
         {
-          filename: "invoice.pdf",
+          filename: `Order Invoice "ID:${order.OrderId}".pdf`,
           path: pdfPath,
           contentType: "application/pdf",
         },
