@@ -34,7 +34,7 @@ const orderSchema = new mongoose.Schema(
         },
         count: Number,
         color: String,
-        price: String,
+        price: Number,
         isCancelled: { type: Boolean, default: false },
         isReturned: { type: Boolean, default: false },
       },
