@@ -2,6 +2,7 @@ const User = require("../models/user");
 const { transporter } = require("../middlewares/utils");
 const OtpVerification = require("../models/otp");
 const bcrypt = require("bcrypt");
+const { otpEmailtemplate } = require("../middlewares/utils");
 
 exports.createOrUpdateUser = async (req, res) => {
   const { name, picture, email } = req.user;
@@ -29,26 +30,6 @@ exports.createOrUpdateUser = async (req, res) => {
     res.json(newUser);
   }
 };
-
-// exports.createOrUpdatePhoneUser = async (req, res) => {
-//   const { name, phoneNumber } = req.body;
-
-//   const user = await User.findOneAndUpdate(
-//     { contact: phoneNumber },
-//     { name, email: "noEmail" },
-//     { new: true }
-//   );
-//   if (user) {
-//     res.json(user);
-//   } else {
-//     const newUser = await new User({
-//       contact: phoneNumber,
-//       email: "noEmail",
-//       name,
-//     }).save();
-//     res.json(newUser);
-//   }
-// };
 
 exports.currentUser = async (req, res) => {
   const user = await User.findOne({ email: req.user.email }).exec();
@@ -78,7 +59,7 @@ exports.sendOTP = async (req, res) => {
   } else {
     // Generate a random 6-digit OTP
 
-    const otp = Math.floor(1000 + Math.random() * 9000);
+    const otp = Math.floor(100000 + Math.random() * 900000);
     const saltRounds = 10;
 
     try {
@@ -102,8 +83,9 @@ exports.sendOTP = async (req, res) => {
       const mailOptions = {
         from: "Your App <ishtiaqahmad427427@gmail.com>",
         to: email,
-        subject: "Your OTP Code",
-        text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
+        subject: "Fashion Blush [OTP Code]",
+        // text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
+        html: otpEmailtemplate((otpCode = otp)),
       };
 
       // Send email using Mailjet
