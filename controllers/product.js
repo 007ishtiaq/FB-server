@@ -757,15 +757,34 @@ const handleSub = async (req, res, sub) => {
 };
 
 const handleShipping = async (req, res, shipping) => {
-  const products = await Product.find({ shipping })
-    .populate("category", "_id name")
-    .populate("attributes.subs")
-    .populate("attributes.subs2")
-    // .populate("subs2")
-    // .populate("postedBy", "_id name")
-    .exec();
+  try {
+    if (shipping === "Yes") {
+      console.log("its yes");
 
-  res.json(products);
+      const products = await Product.find({ shippingcharges: 0 })
+        .populate("category", "_id name")
+        .populate("attributes.subs")
+        .populate("attributes.subs2")
+        // .populate("subs2")
+        // .populate("postedBy", "_id name")
+        .exec();
+
+      res.json(products);
+    } else if (shipping === "No") {
+      console.log("its no");
+      const products = await Product.find({ shippingcharges: { $gte: 1 } })
+        .populate("category", "_id name")
+        .populate("attributes.subs")
+        .populate("attributes.subs2")
+        // .populate("subs2")
+        // .populate("postedBy", "_id name")
+        .exec();
+
+      res.json(products);
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Something went wrong" });
+  }
 };
 
 const handleColor = async (req, res, color) => {
@@ -795,6 +814,7 @@ const handleBrand = async (req, res, brand) => {
 exports.searchFilters = async (req, res) => {
   const { query, price, category, stars, sub, shipping, color, brand } =
     req.body;
+  console.log("req.body", req.body);
 
   if (query) {
     // console.log("query --->", query);
