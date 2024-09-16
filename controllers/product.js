@@ -759,8 +759,6 @@ const handleSub = async (req, res, sub) => {
 const handleShipping = async (req, res, shipping) => {
   try {
     if (shipping === "Yes") {
-      console.log("its yes");
-
       const products = await Product.find({ shippingcharges: 0 })
         .populate("category", "_id name")
         .populate("attributes.subs")
@@ -771,7 +769,6 @@ const handleShipping = async (req, res, shipping) => {
 
       res.json(products);
     } else if (shipping === "No") {
-      console.log("its no");
       const products = await Product.find({ shippingcharges: { $gte: 1 } })
         .populate("category", "_id name")
         .populate("attributes.subs")
@@ -814,7 +811,6 @@ const handleBrand = async (req, res, brand) => {
 exports.searchFilters = async (req, res) => {
   const { query, price, category, stars, sub, shipping, color, brand } =
     req.body;
-  console.log("req.body", req.body);
 
   if (query) {
     // console.log("query --->", query);
