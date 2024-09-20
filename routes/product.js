@@ -32,8 +32,8 @@ const {
 router.post("/product", expiryCheck, authCheck, adminCheck, create);
 router.get("/products/total", expiryCheck, productsCount);
 
-router.get("/productsByCount/:count", expiryCheck, listAll); // products/100
-router.get("/products/:page", expiryCheck, listByPage); // products/100
+router.get("/productsByCount/:count", expiryCheck, listAll);
+router.get("/products/:page", expiryCheck, listByPage);
 
 router.delete("/product/:slug", expiryCheck, authCheck, adminCheck, remove);
 router.post(

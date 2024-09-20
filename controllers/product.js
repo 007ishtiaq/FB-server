@@ -55,20 +55,13 @@ exports.listByPage = async (req, res) => {
     const currentPage = page || 1;
     const perPage = 2;
 
-    let foundproducts = await Product.find({})
+    const products = await Product.find({})
+      .skip((currentPage - 1) * perPage)
+      .limit(perPage)
       .populate("category")
       .sort([["createdAt", "desc"]])
       .exec();
-
-    if (!foundproducts) {
-      return res.status(404).json({ message: "Products not found" });
-    }
-
-    const startIndex = (currentPage - 1) * perPage;
-    const endIndex = currentPage * perPage;
-
-    const products = foundproducts.slice(startIndex, endIndex);
-    const totalProducts = foundproducts.length;
+    const totalProducts = await Product.countDocuments();
 
     res.json({ products, totalProducts });
   } catch (err) {
