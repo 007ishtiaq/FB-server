@@ -8,6 +8,7 @@ const { authCheck, adminCheck, expiryCheck } = require("../middlewares/auth");
 const {
   create,
   listAll,
+  listByPage,
   remove,
   read,
   readAdmin,
@@ -31,7 +32,9 @@ const {
 router.post("/product", expiryCheck, authCheck, adminCheck, create);
 router.get("/products/total", expiryCheck, productsCount);
 
-router.get("/products/:count", expiryCheck, listAll); // products/100
+router.get("/productsByCount/:count", expiryCheck, listAll); // products/100
+router.get("/products/:page", expiryCheck, listByPage); // products/100
+
 router.delete("/product/:slug", expiryCheck, authCheck, adminCheck, remove);
 router.post(
   "/productAdmin/:slug",

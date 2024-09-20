@@ -49,6 +49,36 @@ exports.listAll = async (req, res) => {
   res.json(products);
 };
 
+exports.listByPage = async (req, res) => {
+  try {
+    const page = req.params.page;
+    const currentPage = page || 1;
+    const perPage = 2;
+
+    let foundproducts = await Product.find({})
+      .populate("category")
+      .sort([["createdAt", "desc"]])
+      .exec();
+
+    if (!foundproducts) {
+      return res.status(404).json({ message: "Products not found" });
+    }
+
+    const startIndex = (currentPage - 1) * perPage;
+    const endIndex = currentPage * perPage;
+
+    const products = foundproducts.slice(startIndex, endIndex);
+    const totalProducts = foundproducts.length;
+
+    res.json({ products, totalProducts });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ message: "Internal Server Error, fetching products" });
+  }
+};
+
 exports.remove = async (req, res) => {
   try {
     const deleted = await Product.findOneAndRemove({
