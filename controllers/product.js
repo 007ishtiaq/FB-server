@@ -51,9 +51,9 @@ exports.listAll = async (req, res) => {
 
 exports.listByPage = async (req, res) => {
   try {
-    const page = req.params.page;
+    const page = req.body.page;
     const currentPage = page || 1;
-    const perPage = 2;
+    const perPage = req.body.perPage;
 
     const products = await Product.find({})
       .skip((currentPage - 1) * perPage)
@@ -608,10 +608,8 @@ exports.ratedProducts = async (req, res) => {
 // };
 
 // New system - with pagination
-const handleQuery = async (req, res, query, page) => {
+const handleQuery = async (req, res, query, page, perPage) => {
   try {
-    const perPage = 2;
-
     // Perform text search on title and description
     const textSearchResults = await Product.find({ $text: { $search: query } })
       .populate("category", "_id name")
@@ -837,10 +835,11 @@ exports.searchFilters = async (req, res) => {
   const { query, price, category, stars, sub, shipping, color, brand } =
     req.body.arg;
   const page = req.body.page;
+  const perPage = req.body.perPage;
 
   if (query) {
     // console.log("query --->", query);
-    await handleQuery(req, res, query, page);
+    await handleQuery(req, res, query, page, perPage);
   }
 
   // price [20, 200]
