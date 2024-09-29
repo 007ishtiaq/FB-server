@@ -28,6 +28,12 @@ const productSchema = new mongoose.Schema(
       maxlength: 2000,
       text: true,
     },
+    desattributes: [
+      {
+        type: Map, // Using Map to store dynamic key-value pairs
+        of: String, // Values will be of type String
+      },
+    ],
     price: {
       type: Number,
       required: true,
