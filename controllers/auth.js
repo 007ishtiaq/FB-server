@@ -5,8 +5,7 @@ const bcrypt = require("bcrypt");
 const { otpEmailtemplate } = require("../middlewares/utils");
 
 exports.createOrUpdateUser = async (req, res) => {
-  const { name, picture, email } = req.user;
-  let updatedName = name || email.split("@")[0];
+  const { picture, email } = req.user;
 
   const user = await User.findOneAndUpdate(
     { email },
@@ -21,7 +20,6 @@ exports.createOrUpdateUser = async (req, res) => {
   } else {
     const newUser = await new User({
       email,
-      name: updatedName,
       picture,
     }).save();
     // Remove all previously saved OTPs for this email
