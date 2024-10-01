@@ -407,16 +407,6 @@ exports.productsCount = async (req, res) => {
   res.json(total);
 };
 
-exports.ratedProducts = async (req, res) => {
-  const user = await User.findOne({ email: req.user.email }).exec();
-
-  let Ratedproducts = await Product.find({
-    ratings: { $elemMatch: { postedBy: user._id } },
-  });
-
-  res.json(Ratedproducts);
-};
-
 // old system - searching good but without pagination
 
 // const handleQuery = async (req, res, query, page) => {

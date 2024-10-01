@@ -1,5 +1,5 @@
-const Review = require("../models/review");
 const Product = require("../models/product");
+const Review = require("../models/review");
 const User = require("../models/user");
 
 exports.productStar = async (req, res) => {
@@ -71,6 +71,39 @@ exports.Reviewslist = async (req, res) => {
     const totalReviews = await Review.countDocuments({ product: product._id });
 
     res.json({ reviews, totalReviews });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.ratedProducts = async (req, res) => {
+  try {
+    // Find the user by their email
+    const user = await User.findOne({ email: req.user.email }).exec();
+
+    // Find all reviews posted by this user and populate the product field
+    const userReviews = await Review.find({ postedBy: user._id })
+      .populate("product", "_id title images color") // Populate product details
+      .exec();
+
+    // Prepare the response with product details and add the ratings array inside each product
+    const ratedProductsWithRatings = userReviews.map((review) => ({
+      product: {
+        _id: review.product._id,
+        title: review.product.title,
+        images: review.product.images,
+        color: review.product.color,
+        ratings: [
+          {
+            star: review.star, // Include the star rating
+            comment: review.comment, // Include the comment
+          },
+        ],
+      },
+    }));
+
+    res.json(ratedProductsWithRatings);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal Server Error" });

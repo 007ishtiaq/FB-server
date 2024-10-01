@@ -20,10 +20,7 @@ const {
   checkFlash,
   flashreset,
   productsCount,
-  productStar,
-  ratedProducts,
   listSimilar,
-  listRelated,
   searchFilters,
   highestprice,
 } = require("../controllers/product");
