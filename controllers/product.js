@@ -1,4 +1,5 @@
 const Product = require("../models/product");
+const Review = require("../models/review");
 const User = require("../models/user");
 const slugify = require("slugify");
 const Category = require("../models/category");
@@ -627,39 +628,31 @@ const handleCategory = async (req, res, category) => {
 
 const handleStar = async (req, res, stars) => {
   try {
-    const aggregates = await Product.aggregate([
-      {
-        $project: {
-          document: "$$ROOT",
-          floorAverage: {
-            $floor: { $avg: "$ratings.star" },
-          },
-        },
-      },
-      { $match: { floorAverage: { $gte: stars } } }, // Filter by minStars
-    ])
-      .limit(12)
+    // Find reviews with the exact star rating
+    const reviews = await Review.find({ star: stars })
+      .select("product") // Only return the product field
       .exec();
 
-    const productIds = aggregates.map((agg) => agg.document._id);
+    // Extract product IDs from the reviews
+    const productIds = reviews.map((review) => review.product);
 
+    // Find products based on the product IDs
     const products = await Product.find({ _id: { $in: productIds } })
-      .populate("category", "_id name")
-      .populate("attributes.subs")
-      .populate("attributes.subs2")
+      .populate("category", "_id name") // Populate the category
+      .populate("attributes.subs") // Populate any other necessary fields
       .exec();
 
     res.json({
-      products,
+      products, // Return the products that have the matching star rating
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
 const handleSub = async (req, res, sub) => {
-  console.log("sub", sub);
+  // console.log("sub", sub);
   try {
     // Use MongoDB's $elemMatch to match an element in the array
     const products = await Product.find({
