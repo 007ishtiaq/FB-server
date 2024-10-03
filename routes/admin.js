@@ -27,6 +27,7 @@ const {
   allratings,
   deleteOrder,
   sendInvoiceToEmail,
+  addAdminReview,
 } = require("../controllers/admin");
 
 // routes
@@ -129,6 +130,15 @@ router.delete(
   authCheck,
   adminCheck,
   deleteEntry
+);
+
+// Admin Add a new product review
+router.post(
+  "/admin/add-review",
+  expiryCheck,
+  authCheck,
+  adminCheck,
+  addAdminReview
 );
 
 module.exports = router;

@@ -2,6 +2,7 @@ const Product = require("../models/product");
 const Review = require("../models/review");
 const User = require("../models/user");
 
+// do rating on product
 exports.productStar = async (req, res) => {
   try {
     const { productId } = req.params;
@@ -47,6 +48,7 @@ exports.productStar = async (req, res) => {
   }
 };
 
+// list reviews based on createdOn date
 exports.Reviewslist = async (req, res) => {
   try {
     const { productslug, page } = req.body.data;
@@ -60,23 +62,49 @@ exports.Reviewslist = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Use Review schema to find reviews related to the product with pagination
+    // Get all reviews for this product (without pagination) to calculate average rating and star counts
+    const allReviews = await Review.find({ product: product._id }).exec();
+
+    // Calculate the average rating
+    const totalReviews = allReviews.length;
+    const totalStars = allReviews.reduce((sum, review) => sum + review.star, 0);
+    const avgRating =
+      totalReviews > 0 ? (totalStars / totalReviews).toFixed(1) : 0;
+
+    // Accumulate the number of reviews for each star rating (1 to 5)
+    const starCounts = await Review.aggregate([
+      { $match: { product: product._id } },
+      {
+        $group: {
+          _id: "$star", // Group by star rating
+          count: { $sum: 1 }, // Count the number of reviews for each star rating
+        },
+      },
+      { $sort: { _id: -1 } }, // Sort by star rating (descending)
+    ]);
+
+    // Format starCounts as an object with star ratings from 1 to 5
+    let starAccumulator = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    starCounts.forEach((item) => {
+      starAccumulator[item._id] = item.count;
+    });
+
+    // Get reviews with pagination, sorted by postedOn date (newer to older)
     const reviews = await Review.find({ product: product._id })
+      .sort({ postedOn: -1 }) // Sort by postedOn in descending order (newer first)
       .skip((currentPage - 1) * perPage) // Skip reviews for pagination
       .limit(perPage) // Limit the number of reviews per page
       .populate("postedBy", "_id name") // Populate postedBy with user details
       .exec();
 
-    // Get total count of reviews for pagination
-    const totalReviews = await Review.countDocuments({ product: product._id });
-
-    res.json({ reviews, totalReviews });
+    res.json({ reviews, totalReviews, avgRating, starAccumulator });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
 
+// list reviews based on user
 exports.ratedProducts = async (req, res) => {
   try {
     // Find the user by their email

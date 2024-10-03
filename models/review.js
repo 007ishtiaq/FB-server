@@ -21,6 +21,10 @@ const reviewSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    posterName: {
+      type: String,
+      trim: true,
+    },
     isRead: {
       type: Boolean,
       default: false,

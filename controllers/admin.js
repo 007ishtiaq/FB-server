@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const Product = require("../models/product");
+const Review = require("../models/review");
 const Order = require("../models/order");
 const Productcancel = require("../models/productcancel");
 const Productreturn = require("../models/productreturn");
@@ -1708,5 +1709,33 @@ exports.salesData = async (req, res) => {
     res.status(200).json({ totalIncom, yearIncom, monthIncom, dailyIncom });
   } catch (error) {
     res.status(400).json({ error });
+  }
+};
+
+exports.addAdminReview = async (req, res) => {
+  const { productId, posterName, postedDate, star, comment } = req.body.data;
+
+  try {
+    const user = await User.findOne({ email: req.user.email }).exec();
+
+    const product = await Product.findById(productId).exec();
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    console.log(product);
+
+    const newReview = new Review({
+      star,
+      comment,
+      postedBy: user._id,
+      posterName,
+      product: productId,
+      postedOn: new Date(postedDate),
+    });
+
+    await newReview.save();
+    res.json(newReview);
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
   }
 };
