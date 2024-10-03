@@ -1713,7 +1713,8 @@ exports.salesData = async (req, res) => {
 };
 
 exports.addAdminReview = async (req, res) => {
-  const { productId, posterName, postedDate, star, comment } = req.body.data;
+  const { productId, posterName, postedDate, star, comment, images } =
+    req.body.data;
 
   try {
     const user = await User.findOne({ email: req.user.email }).exec();
@@ -1731,6 +1732,7 @@ exports.addAdminReview = async (req, res) => {
       posterName,
       product: productId,
       postedOn: new Date(postedDate),
+      images,
     });
 
     await newReview.save();
