@@ -106,16 +106,23 @@ exports.Reviewslist = async (req, res) => {
 
 // list reviews based on user
 exports.ratedProducts = async (req, res) => {
+  const { page = 1, perPage = 10 } = req.body;
+
   try {
     // Find the user by their email
     const user = await User.findOne({ email: req.user.email }).exec();
 
-    // Find all reviews posted by this user and populate the product field
+    // Calculate the total number of reviews posted by this user
+    const totalReviews = await Review.countDocuments({ postedBy: user._id });
+
+    // Find user reviews with pagination
     const userReviews = await Review.find({ postedBy: user._id })
       .populate("product", "_id title images color") // Populate product details
+      .skip((page - 1) * perPage) // Skip for pagination
+      .limit(perPage) // Limit results per page
       .exec();
 
-    // Prepare the response with product details and add the ratings array inside each product
+    // Prepare the response with product details and ratings
     const ratedProductsWithRatings = userReviews.map((review) => ({
       product: {
         _id: review.product._id,
@@ -131,7 +138,12 @@ exports.ratedProducts = async (req, res) => {
       },
     }));
 
-    res.json(ratedProductsWithRatings);
+    // Return the paginated results along with the total count
+    res.json({
+      ratedProductsWithRatings,
+      totalReviews, // Total number of reviews to calculate total pages
+      currentPage: page,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal Server Error" });

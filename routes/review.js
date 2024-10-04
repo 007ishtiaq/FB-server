@@ -18,6 +18,6 @@ router.put("/product/review/:productId", expiryCheck, authCheck, productStar);
 router.post("/reviews", expiryCheck, Reviewslist);
 
 // list reviews based on user
-router.get("/ratedAll", expiryCheck, authCheck, ratedProducts);
+router.post("/ratedAll", expiryCheck, authCheck, ratedProducts);
 
 module.exports = router;
