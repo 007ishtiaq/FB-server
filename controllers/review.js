@@ -106,7 +106,7 @@ exports.Reviewslist = async (req, res) => {
 
 // list reviews based on user
 exports.ratedProducts = async (req, res) => {
-  const { page = 1, perPage = 10 } = req.body;
+  const { page, perPage } = req.body;
 
   try {
     // Find the user by their email

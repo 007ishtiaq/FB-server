@@ -21,7 +21,8 @@ const {
   returnedorders,
   order,
   addToWishlist,
-  wishlist,
+  wishlistFull,
+  wishlistByPage,
   removeFromWishlist,
   createCashOrder,
   createOrder,
@@ -80,7 +81,8 @@ router.delete(
 
 // wishlist
 router.post("/user/wishlist", expiryCheck, authCheck, addToWishlist);
-router.get("/user/wishlist", expiryCheck, authCheck, wishlist);
+router.get("/getwishlist", expiryCheck, authCheck, wishlistFull);
+router.post("/getwishlistbypage", expiryCheck, authCheck, wishlistByPage);
 router.put(
   "/user/wishlist/:productId",
   expiryCheck,

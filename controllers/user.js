@@ -485,7 +485,7 @@ exports.addToWishlist = async (req, res) => {
   }
 };
 
-exports.wishlist = async (req, res) => {
+exports.wishlistFull = async (req, res) => {
   try {
     const list = await User.findOne({ email: req.user.email })
       .select("wishlist")
@@ -496,6 +496,49 @@ exports.wishlist = async (req, res) => {
       res.json(list);
     } else {
       res.json([]);
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.wishlistByPage = async (req, res) => {
+  const { page = 1, perPage = 10 } = req.body;
+
+  try {
+    // Find the user's wishlist
+    const user = await User.findOne({ email: req.user.email })
+      .select("wishlist")
+      .populate({
+        path: "wishlist",
+        options: {
+          skip: (page - 1) * perPage, // Skip for pagination
+          limit: perPage, // Limit the number of results per page
+          sort: { _id: -1 }, // Sort by _id in descending order (newest items first)
+        },
+      })
+      .exec();
+
+    if (user && user.wishlist) {
+      // Get the total count of wishlist items
+      const wishlistCount = await User.findOne({ email: req.user.email })
+        .select("wishlist")
+        .exec();
+
+      const totalWishlistCount = wishlistCount.wishlist.length;
+
+      res.json({
+        wishlist: user.wishlist, // Paginated wishlist
+        wishlistCount: totalWishlistCount, // Total number of items in the wishlist
+        currentPage: page, // Current page
+      });
+    } else {
+      res.json({
+        wishlist: [],
+        wishlistCount: 0,
+        currentPage: page,
+      });
     }
   } catch (error) {
     console.error(error);
