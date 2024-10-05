@@ -133,6 +133,7 @@ exports.ratedProducts = async (req, res) => {
           {
             star: review.star, // Include the star rating
             comment: review.comment, // Include the comment
+            images: review.images, // Include the comment
           },
         ],
       },
