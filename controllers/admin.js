@@ -1723,7 +1723,7 @@ exports.addAdminReview = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    console.log(product);
+    // console.log(product);
 
     const newReview = new Review({
       star,
@@ -1739,5 +1739,75 @@ exports.addAdminReview = async (req, res) => {
     res.json(newReview);
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.getAdminReview = async (req, res) => {
+  const productId = req.body.query;
+  // console.log(productId);
+
+  try {
+    // Check if productId is provided
+    if (productId) {
+      // Find the user by their email
+      const user = await User.findOne({ email: req.user.email }).exec();
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Find reviews for the product posted by this user and populate the product details (title and first image)
+      const reviews = await Review.find({
+        product: productId, // Match the product
+        postedBy: user._id, // Match the user who posted the review
+      })
+        .populate({
+          path: "product", // Populate the product field
+          select: "title images", // Select only title and images from the product schema
+          transform: (doc) => ({
+            title: doc.title,
+            image: doc.images && doc.images.length > 0 ? doc.images[0] : null, // Return only the first image
+          }),
+        })
+        .sort({ postedOn: -1 }) // Sort reviews by postedOn field in descending order (newest first)
+        .exec();
+
+      // Return the sorted and populated reviews
+      return res.json(reviews);
+    } else {
+      // If productId is not provided
+      return res.status(400).json({ message: "Product ID is required" });
+    }
+  } catch (err) {
+    // Handle any errors that occur
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+exports.deleteAdminReview = async (req, res) => {
+  const { reviewId } = req.body; // Extract reviewId from the request body
+
+  try {
+    // Check if reviewId is provided
+    if (!reviewId) {
+      return res.status(400).json({ message: "Review ID is required" });
+    }
+
+    // Find and delete the review by its ID
+    const deletedReview = await Review.findByIdAndDelete(reviewId);
+
+    // If no review was found with the given ID
+    if (!deletedReview) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+
+    // Successfully deleted the review
+    return res.json({ message: "Review deleted successfully" });
+  } catch (err) {
+    // Handle any errors that occur during deletion
+    console.error(err);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error" });
   }
 };

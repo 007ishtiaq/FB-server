@@ -28,6 +28,8 @@ const {
   deleteOrder,
   sendInvoiceToEmail,
   addAdminReview,
+  getAdminReview,
+  deleteAdminReview,
 } = require("../controllers/admin");
 
 // routes
@@ -139,6 +141,22 @@ router.post(
   authCheck,
   adminCheck,
   addAdminReview
+);
+// get Admin's product reviews array
+router.post(
+  "/admin/product-reviews",
+  expiryCheck,
+  authCheck,
+  adminCheck,
+  getAdminReview
+);
+// delete Admin's 1 product review
+router.put(
+  "/admin/delete-review",
+  expiryCheck,
+  authCheck,
+  adminCheck,
+  deleteAdminReview
 );
 
 module.exports = router;
