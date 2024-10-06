@@ -5,10 +5,19 @@ const router = express.Router();
 const { authCheck, adminCheck, expiryCheck } = require("../middlewares/auth");
 
 // controllers
-const { upload, remove } = require("../controllers/cloudinary");
+const { upload, remove, removeImages } = require("../controllers/cloudinary");
 
 router.post("/uploadimages", expiryCheck, authCheck, adminCheck, upload);
 router.post("/removeimage", expiryCheck, authCheck, adminCheck, remove);
+
+// remove review/product images in bulk by cloudinary
+router.post(
+  "/removebulkimage",
+  expiryCheck,
+  authCheck,
+  adminCheck,
+  removeImages
+);
 
 //for users deposite slip uploading
 router.post("/slipupload", expiryCheck, authCheck, upload);
