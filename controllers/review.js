@@ -117,7 +117,7 @@ exports.ratedProducts = async (req, res) => {
 
     // Find user reviews with pagination
     const userReviews = await Review.find({ postedBy: user._id })
-      .populate("product", "_id title images color") // Populate product details
+      .populate("product", "_id title slug images color") // Populate product details
       .skip((page - 1) * perPage) // Skip for pagination
       .limit(perPage) // Limit results per page
       .exec();
@@ -127,6 +127,7 @@ exports.ratedProducts = async (req, res) => {
       product: {
         _id: review.product._id,
         title: review.product.title,
+        slug: review.product.slug,
         images: review.product.images,
         color: review.product.color,
         ratings: [
