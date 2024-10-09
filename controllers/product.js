@@ -51,10 +51,11 @@ exports.listAll = async (req, res) => {
 };
 
 exports.listByPage = async (req, res) => {
+  const page = req.body.page;
+  const perPage = req.body.perPage;
+
   try {
-    const page = req.body.page;
     const currentPage = page || 1;
-    const perPage = req.body.perPage;
 
     const products = await Product.find({})
       .skip((currentPage - 1) * perPage)
