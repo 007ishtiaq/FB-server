@@ -136,7 +136,6 @@ exports.listSimilar = async (req, res) => {
     if (patern) {
       Products = await Product.find({
         slug: { $regex: patern },
-        brand: product.brand,
         _id: { $ne: product._id },
       }).select("images title slug category");
     }

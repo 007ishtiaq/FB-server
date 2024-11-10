@@ -1,50 +1,66 @@
 const Product = require("../models/product");
+const Review = require("../models/review");
 
 exports.getAllRatings = async (req, res) => {
   try {
-    const result = await Product.aggregate([
+    const result = await Review.aggregate([
       {
-        $unwind: "$ratings",
+        $lookup: {
+          from: "products", // The Product collection
+          localField: "product", // Product reference in Review
+          foreignField: "_id",
+          as: "productDetails",
+        },
+      },
+      {
+        $unwind: "$productDetails",
       },
       {
         $lookup: {
-          from: "users",
-          localField: "ratings.postedBy",
+          from: "users", // The User collection
+          localField: "postedBy", // User reference in Review
           foreignField: "_id",
-          as: "user",
+          as: "userDetails",
         },
       },
       {
-        $unwind: "$user",
+        $unwind: "$userDetails",
       },
       {
         $project: {
-          "ratings.star": 1,
-          "ratings.comment": 1,
-          "ratings.postedOn": 1,
-          "ratings._id": 1,
-          "ratings.productId": "$_id",
-          "ratings.isRead": "$ratings.isRead", // Include isRead from ratings
-          "user.name": 1,
-          "user.email": 1,
-          title: 1,
-          slug: 1, // Include the slug field in the output
+          star: 1,
+          comment: 1,
+          postedOn: 1,
+          isRead: 1,
+          images: 1, // Include images array if needed
+          "userDetails.name": 1,
+          "userDetails.email": 1,
+          "productDetails._id": 1,
+          "productDetails.title": 1,
+          "productDetails.slug": 1,
         },
+      },
+      {
+        $sort: { postedOn: -1 }, // Sort reviews by postedOn in descending order
       },
     ]);
 
     const allRatings = result.map((rating) => ({
-      ...rating.ratings,
-      isRead: rating.ratings.isRead, // Include isRead in the output
+      _id: rating._id,
+      star: rating.star,
+      comment: rating.comment,
+      postedOn: rating.postedOn,
+      isRead: rating.isRead,
+      images: rating.images,
       postedBy: {
-        _id: rating.user._id,
-        name: rating.user.name,
-        email: rating.user.email,
+        _id: rating.userDetails._id,
+        name: rating.userDetails.name,
+        email: rating.userDetails.email,
       },
       product: {
-        _id: rating.ratings.productId,
-        title: rating.title,
-        slug: rating.slug, // Include the slug in the product field
+        _id: rating.productDetails._id,
+        title: rating.productDetails.title,
+        slug: rating.productDetails.slug,
       },
     }));
 
@@ -56,36 +72,28 @@ exports.getAllRatings = async (req, res) => {
 };
 
 exports.markRead = async (req, res) => {
-  const { productId, ratingId } = req.body;
+  const { ratingId } = req.body;
+
   try {
-    // Find the product by ID
-    const product = await Product.findById(productId);
+    // Find the review by its ID
+    const review = await Review.findById(ratingId);
 
-    if (!product) {
+    if (!review) {
       return res
         .status(404)
-        .json({ success: false, message: "Product not found" });
-    }
-
-    // Find the rating within the product's ratings array by ID
-    const rating = product.ratings.find((r) => r._id.toString() === ratingId);
-
-    if (!rating) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Rating not found" });
+        .json({ success: false, message: "Review not found" });
     }
 
     // Toggle the value of isRead
-    rating.isRead = !rating.isRead;
+    review.isRead = !review.isRead;
 
-    // Save the updated product
-    await product.save();
+    // Save the updated review
+    await review.save();
 
     res.json({
       success: true,
       message: "isRead updated successfully",
-      isRead: rating.isRead,
+      isRead: review.isRead,
     });
   } catch (err) {
     console.error(err);
@@ -94,34 +102,17 @@ exports.markRead = async (req, res) => {
 };
 
 exports.deleteComment = async (req, res) => {
-  const { productId, ratingId } = req.body;
+  const { ratingId } = req.body;
 
   try {
-    // Find the product by ID
-    const product = await Product.findById(productId);
+    // Find and delete the review by ID
+    const deletedReview = await Review.findByIdAndDelete(ratingId);
 
-    if (!product) {
+    if (!deletedReview) {
       return res
         .status(404)
-        .json({ success: false, message: "Product not found" });
+        .json({ success: false, message: "Review not found" });
     }
-
-    // Find the index of the rating with the given ratingId
-    const ratingIndex = product.ratings.findIndex(
-      (r) => r._id.toString() === ratingId
-    );
-
-    if (ratingIndex === -1) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Rating not found in the product" });
-    }
-
-    // Remove the rating from the product's ratings array
-    product.ratings.splice(ratingIndex, 1);
-
-    // Save the updated product
-    await product.save();
 
     res.json({ success: true, message: "Comment deleted successfully" });
   } catch (err) {

@@ -122,8 +122,11 @@ exports.ratedProducts = async (req, res) => {
       .limit(perPage) // Limit results per page
       .exec();
 
+    // Filter out reviews with deleted products (where product is null)
+    const validUserReviews = userReviews.filter((review) => review.product);
+
     // Prepare the response with product details and ratings
-    const ratedProductsWithRatings = userReviews.map((review) => ({
+    const ratedProductsWithRatings = validUserReviews.map((review) => ({
       product: {
         _id: review.product._id,
         title: review.product.title,
@@ -134,7 +137,7 @@ exports.ratedProducts = async (req, res) => {
           {
             star: review.star, // Include the star rating
             comment: review.comment, // Include the comment
-            images: review.images, // Include the comment
+            images: review.images, // Include any associated images
           },
         ],
       },
@@ -143,7 +146,7 @@ exports.ratedProducts = async (req, res) => {
     // Return the paginated results along with the total count
     res.json({
       ratedProductsWithRatings,
-      totalReviews, // Total number of reviews to calculate total pages
+      totalReviews: validUserReviews.length, // Updated count for valid reviews
       currentPage: page,
     });
   } catch (err) {
