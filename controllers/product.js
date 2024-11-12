@@ -652,15 +652,12 @@ const handleStar = async (req, res, stars) => {
 };
 
 const handleSub = async (req, res, sub) => {
-  // console.log("sub", sub);
   try {
-    // Use MongoDB's $elemMatch to match an element in the array
     const products = await Product.find({
-      "attributes.subs2": { $elemMatch: { $eq: sub } },
+      "attributes.subs": sub, // Searching in `attributes.subs` field
     })
       .populate("category", "_id name")
-      .populate("attributes.subs")
-      .populate("attributes.subs2")
+      .populate("attributes.subs") // Populate the `attributes.subs` field
       .exec();
 
     res.json({
