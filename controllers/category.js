@@ -76,46 +76,77 @@ exports.getSubs = async (req, res) => {
   }
 };
 
-// reading categories for slider
+// reading categories for slider - code with category , sub and sub 2
+// exports.getCategoriesWithChildren = async (req, res) => {
+//   try {
+//     const categories = await Category.find().exec();
+//     const categoriesWithChildren = categories.map(async (category) => {
+//       const subs = await Sub.find({ parent: category._id }).exec();
+
+//       const subsWithChildren = await Promise.all(
+//         subs.map(async (sub) => {
+//           const sub2s = await Sub2.find({ parent: sub._id }).exec();
+
+//           const sub2sWithChildren = sub2s.map((sub2) => ({
+//             _id: sub2._id,
+//             name: sub2.name,
+//             slug: sub2.slug,
+//           }));
+
+//           return {
+//             _id: sub._id,
+//             name: sub.name,
+//             slug: sub.slug,
+//             image: sub.image,
+//             children: sub2sWithChildren,
+//           };
+//         })
+//       );
+//       return {
+//         _id: category._id,
+//         name: category.name,
+//         slug: category.slug,
+//         svg: category.svg,
+//         parent: category.parent,
+//         children: subsWithChildren,
+//       };
+//     });
+//     const result = await Promise.all(categoriesWithChildren);
+//     res.json(result);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   }
+// };
+
+// reading categories for slider - code with category , sub
 exports.getCategoriesWithChildren = async (req, res) => {
   try {
     const categories = await Category.find().exec();
-    const categoriesWithChildren = categories.map(async (category) => {
-      const subs = await Sub.find({ parent: category._id }).exec();
 
-      const subsWithChildren = await Promise.all(
-        subs.map(async (sub) => {
-          const sub2s = await Sub2.find({ parent: sub._id }).exec();
+    const categoriesWithChildren = await Promise.all(
+      categories.map(async (category) => {
+        const subs = await Sub.find({ parent: category._id }).exec();
 
-          const sub2sWithChildren = sub2s.map((sub2) => ({
-            _id: sub2._id,
-            name: sub2.name,
-            slug: sub2.slug,
-          }));
+        const subsWithChildren = subs.map((sub) => ({
+          _id: sub._id,
+          name: sub.name,
+          slug: sub.slug,
+          image: sub.image,
+          parent: sub.parent,
+        }));
 
-          return {
-            _id: sub._id,
-            name: sub.name,
-            slug: sub.slug,
-            image: sub.image,
-            children: sub2sWithChildren,
-          };
-        })
-      );
+        return {
+          _id: category._id,
+          name: category.name,
+          slug: category.slug,
+          svg: category.svg,
+          children: subsWithChildren,
+        };
+      })
+    );
 
-      return {
-        _id: category._id,
-        name: category.name,
-        slug: category.slug,
-        svg: category.svg,
-        parent: category.parent,
-        children: subsWithChildren,
-      };
-    });
-
-    const result = await Promise.all(categoriesWithChildren);
-
-    res.json(result);
+    res.json(categoriesWithChildren);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal Server Error" });
