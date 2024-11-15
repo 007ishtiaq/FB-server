@@ -592,10 +592,21 @@ const handleQuery = async (req, res, query, page, perPage) => {
 const handlePrice = async (req, res, price) => {
   try {
     let products = await Product.find({
-      price: {
-        $gte: price[0],
-        $lte: price[1],
-      },
+      $or: [
+        {
+          disprice: {
+            $gte: price[0],
+            $lte: price[1],
+          },
+        },
+        {
+          disprice: null,
+          price: {
+            $gte: price[0],
+            $lte: price[1],
+          },
+        },
+      ],
     })
       .populate("category", "_id name")
       .populate("attributes.subs")
@@ -606,7 +617,10 @@ const handlePrice = async (req, res, price) => {
       products,
     });
   } catch (err) {
-    console.log(err);
+    console.error(err);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching products." });
   }
 };
 
