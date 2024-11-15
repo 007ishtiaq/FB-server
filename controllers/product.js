@@ -408,119 +408,28 @@ exports.productsCount = async (req, res) => {
   res.json(total);
 };
 
-// old system - searching good but without pagination
-
-// const handleQuery = async (req, res, query, page) => {
-//   try {
-//     const perPage = 2;
-
-//     // Perform text search on title and description
-//     const textSearchResults = await Product.find({ $text: { $search: query } })
-//       .populate("category", "_id name")
-//       .populate("attributes.subs")
-//       .populate("attributes.subs2")
-//       .skip((page - 1) * perPage) // Skip products for pagination
-//       .limit(perPage) // Limit the number of products returned
-//       .exec();
-
-//     // If text search results are not empty, return them
-//     if (textSearchResults.length !== 0) {
-//       return res.json({
-//         products: textSearchResults,
-//         totalProducts: totalTextSearchResults,
-//       });
-//     }
-
-//     // Fetch all products
-//     const allProducts = await Product.find({})
-//       .populate("category", "_id name")
-//       .populate("attributes.subs")
-//       .populate("attributes.subs2")
-//       .exec();
-
-//     const lowerCaseQuery = query.toLowerCase();
-
-//     // Search by title (case-insensitive)
-//     let titleSearchResults = allProducts.filter((product) =>
-//       product.title.toLowerCase().includes(lowerCaseQuery)
-//     );
-//     if (titleSearchResults.length !== 0) {
-//       return res.json(titleSearchResults);
-//     }
-
-//     // Search by description (case-insensitive)
-//     let descriptionSearchResults = allProducts.filter((product) =>
-//       product.description.toLowerCase().includes(lowerCaseQuery)
-//     );
-//     if (descriptionSearchResults.length !== 0) {
-//       return res.json(descriptionSearchResults);
-//     }
-
-//     // Search by category (case-insensitive)
-//     let categorySearchResults = allProducts.filter((product) =>
-//       product.category.name.toLowerCase().includes(lowerCaseQuery)
-//     );
-//     if (categorySearchResults.length !== 0) {
-//       return res.json(categorySearchResults);
-//     }
-
-//     // Search by subs (case-insensitive)
-//     let subSearchResults = allProducts.filter((product) =>
-//       product.attributes.some((attr) =>
-//         attr.subs.name.toLowerCase().includes(lowerCaseQuery)
-//       )
-//     );
-//     if (subSearchResults.length !== 0) {
-//       return res.json(subSearchResults);
-//     }
-
-//     // Search by subs2 (case-insensitive)
-//     let sub2SearchResults = allProducts.filter((product) =>
-//       product.attributes.some((attr) =>
-//         attr.subs2.some((sub2) =>
-//           sub2.name.toLowerCase().includes(lowerCaseQuery)
-//         )
-//       )
-//     );
-//     if (sub2SearchResults.length !== 0) {
-//       return res.json(sub2SearchResults);
-//     }
-
-//     // Search by color (case-insensitive)
-//     let colorSearchResults = allProducts.filter((product) =>
-//       product.color.toLowerCase().includes(lowerCaseQuery)
-//     );
-//     if (colorSearchResults.length !== 0) {
-//       return res.json(colorSearchResults);
-//     }
-
-//     // Search by brand (case-insensitive)
-//     let brandSearchResults = allProducts.filter((product) =>
-//       product.brand.toLowerCase().includes(lowerCaseQuery)
-//     );
-//     if (brandSearchResults.length !== 0) {
-//       return res.json(brandSearchResults);
-//     }
-
-//     // Search by art (exact match)
-//     let artSearchResults = allProducts.filter(
-//       (product) => product.art === parseInt(query)
-//     );
-//     if (artSearchResults.length !== 0) {
-//       return res.json(artSearchResults);
-//     }
-
-//     // If no results found
-//     res.status(404).json({ message: "No products found" });
-//   } catch (err) {
-//     console.error("Error handling query:", err);
-//     res.status(500).json({ error: "Internal server error" });
-//   }
-// };
-
 // New system - with pagination
 const handleQuery = async (req, res, query, page, perPage) => {
   try {
+    if (query.toLowerCase() === "free") {
+      const freeProducts = await Product.find({ disprice: 0 })
+        .populate("category", "_id name")
+        .populate("attributes.subs")
+        .populate("attributes.subs2")
+        .skip((page - 1) * perPage)
+        .limit(perPage)
+        .exec();
+
+      const totalFreeProducts = await Product.find({
+        disprice: 0,
+      }).countDocuments();
+
+      return res.json({
+        products: freeProducts,
+        totalProducts: totalFreeProducts,
+      });
+    }
+
     // Perform text search on title and description
     const textSearchResults = await Product.find({ $text: { $search: query } })
       .populate("category", "_id name")
