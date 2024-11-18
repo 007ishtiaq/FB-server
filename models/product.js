@@ -83,6 +83,19 @@ const productSchema = new mongoose.Schema(
     color: {
       type: String,
     },
+    variants: [
+      {
+        name: { type: String, trim: true },
+        image: {
+          url: {
+            type: String,
+          },
+          public_id: {
+            type: String,
+          },
+        },
+      },
+    ],
     brand: {
       type: String,
     },
