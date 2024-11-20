@@ -96,6 +96,12 @@ const productSchema = new mongoose.Schema(
         },
       },
     ],
+    sizes: [
+      {
+        type: Map, // Using Map to store dynamic key-value pairs
+        of: String, // Values will be of type String
+      },
+    ],
     brand: {
       type: String,
     },
