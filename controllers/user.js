@@ -16,64 +16,94 @@ const {
 } = require("mongoose");
 
 exports.userCart = async (req, res) => {
-  // console.log(req.body); // {cart: []}
   const { cart } = req.body;
-
   let products = [];
 
   const user = await User.findOne({ email: req.user.email }).exec();
 
-  // check if cart with logged in user id already exist
+  // Check if a cart for the logged-in user already exists
   let cartExistByThisUser = await Cart.findOne({ orderdBy: user._id }).exec();
-
   if (cartExistByThisUser) {
-    await Cart.findOneAndRemove({
-      orderdBy: user._id,
-    }).exec();
-    // console.log("removed old cart", cartremove);
+    await Cart.findOneAndRemove({ orderdBy: user._id }).exec();
   }
 
+  // Iterate through the items in the cart
   for (let i = 0; i < cart.length; i++) {
     let object = {};
-
     object.product = cart[i]._id;
     object.count = cart[i].count;
     object.color = cart[i].color;
     object.size = cart[i].size;
-    // get price for creating total
+
+    // Get product details from the database
     let productFromDb = await Product.findById(cart[i]._id)
-      .select("price disprice")
+      .select("price disprice sizes shippingcharges")
       .exec();
-    object.price =
-      productFromDb.disprice !== null
-        ? productFromDb.disprice
-        : productFromDb.price;
+
+    // Check if the product has a sizes array and find the matching size
+    if (
+      productFromDb.sizes &&
+      productFromDb.sizes.length > 0 &&
+      productFromDb.sizes[0].size &&
+      productFromDb.sizes[0].prices.length > 0
+    ) {
+      const matchingSize = productFromDb.sizes.find(
+        (sizeObj) => sizeObj.size === cart[i].size
+      );
+
+      if (matchingSize) {
+        const dispriceObj = matchingSize.prices.find(
+          (price) => price.type === "disprice"
+        );
+        const priceObj = matchingSize.prices.find(
+          (price) => price.type === "price"
+        );
+
+        object.price =
+          dispriceObj && dispriceObj.value !== null
+            ? dispriceObj.value
+            : priceObj
+            ? priceObj.value
+            : 0; // Default to 0 if neither price is available
+      } else {
+        // Fall back to the product's price and disprice if no matching size
+        object.price =
+          productFromDb.disprice !== null
+            ? productFromDb.disprice
+            : productFromDb.price;
+      }
+    } else {
+      // Fall back to the product's price and disprice if no sizes array
+      object.price =
+        productFromDb.disprice !== null
+          ? productFromDb.disprice
+          : productFromDb.price;
+    }
 
     products.push(object);
   }
 
-  let cartTotal = 0;
-  for (let i = 0; i < products.length; i++) {
-    cartTotal = cartTotal + products[i].price * products[i].count;
-  }
-  // console.log("cartTotal", cartTotal);
+  // Calculate the cart total
+  let cartTotal = products.reduce(
+    (total, prod) => total + prod.price * prod.count,
+    0
+  );
 
-  //shipping fee (total of all shippings in products)
+  // Calculate the total shipping fee
   let shippingfee = 0;
-
   for (let i = 0; i < products.length; i++) {
     let productFromDb = await Product.findById(products[i].product)
       .select("shippingcharges")
       .exec();
 
     if (products[i].price === 0) {
-      // For products with price 0, multiply shipping charges by count
       shippingfee += productFromDb.shippingcharges * products[i].count;
     } else {
       shippingfee += productFromDb.shippingcharges;
     }
   }
 
+  // Save the new cart
   let newCart = await new Cart({
     products,
     cartTotal,
@@ -81,7 +111,6 @@ exports.userCart = async (req, res) => {
     orderdBy: user._id,
   }).save();
 
-  // console.log("new cart ----> ", newCart);
   res.json({ ok: true });
 };
 
