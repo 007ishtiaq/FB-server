@@ -194,10 +194,11 @@ const generateInvoicePDF = (order) => {
     doc.fontSize(10).fillColor("#3a4553");
     order.products.forEach((item) => {
       doc.text(
-        `[Article: ${item.product.art}] ${item.product.title} - Color: ${item.color}`,
+        `[Article: ${item.product.art}] ${item.product.title} - Color: ${
+          item.color
+        }${item.size ? ` - Size: ${item.size}` : ""}`,
         55,
         doc.y,
-        // { continued: true, width: 350 }
         { width: 325, align: "left" }
       );
       doc.text(item.count.toString(), 325, doc.y - 11, {
