@@ -681,7 +681,7 @@ exports.createCashOrder = async (req, res) => {
 };
 
 exports.createOrder = async (req, res) => {
-  const { image, BFT, Wallet, Easypesa, couponApplied, values } = req.body;
+  const { image, BFT, couponApplied, values } = req.body;
 
   // if Contact details missing ib form values
   if (!values.Contact) return res.json({ error: "Contact Details missing*" });
@@ -732,47 +732,6 @@ exports.createOrder = async (req, res) => {
       paymentStatus: "Bank Fund Transfer",
     }).save();
   }
-  if (Wallet) {
-    newOrder = await new Order({
-      products: userCart.products,
-      paymentIntent: {
-        amount: finalAmount,
-        discounted: userCart.discounted,
-        dispercent: userCart.dispercent,
-        discountType: userCart.discountType,
-        currency: "$",
-        created: Date.now(),
-      },
-      OrderId: generateNumericID(),
-      shippingto: values,
-      email: req.user.email,
-      shippingfee: userCart.shippingfee,
-      PaymentSlip: image,
-      orderdBy: user._id,
-      paymentStatus: "Jazz Cash Wallet",
-    }).save();
-  }
-  if (Easypesa) {
-    newOrder = await new Order({
-      products: userCart.products,
-      paymentIntent: {
-        amount: finalAmount,
-        discounted: userCart.discounted,
-        dispercent: userCart.dispercent,
-        discountType: userCart.discountType,
-        currency: "$",
-        created: Date.now(),
-      },
-      OrderId: generateNumericID(),
-      shippingto: values,
-      email: req.user.email,
-      shippingfee: userCart.shippingfee,
-      PaymentSlip: image,
-      orderdBy: user._id,
-      paymentStatus: "Easypesa Wallet",
-    }).save();
-  }
-
   // decrement quantity, increment sold
   let bulkOption = userCart.products.map((item) => {
     return {
