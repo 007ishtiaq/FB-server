@@ -16,7 +16,21 @@ const {
 } = require("mongoose");
 
 exports.userCart = async (req, res) => {
-  const { cart } = req.body;
+  const { cart, newsletter } = req.body;
+
+  if (newsletter) {
+    // Check if the email already exists in EmailOptIn
+    const existingEmailOptIn = await EmailOptIn.findOne({
+      email: req.user.email,
+    });
+
+    if (!existingEmailOptIn) {
+      // Add the email to EmailOptIn if it doesn't exist
+      const newEmailOptIn = new EmailOptIn({ email: req.user.email });
+      await newEmailOptIn.save();
+    }
+  }
+
   let products = [];
 
   const user = await User.findOne({ email: req.user.email }).exec();
@@ -115,37 +129,52 @@ exports.userCart = async (req, res) => {
 };
 
 exports.getUserCart = async (req, res) => {
-  const user = await User.findOne({ email: req.user.email }).exec();
-  let cart = "";
-  if (user) {
-    cart = await Cart.findOne({ orderdBy: user._id }).exec();
-  }
+  try {
+    const user = await User.findOne({ email: req.user.email }).exec();
 
-  if (cart) {
-    const {
-      cartTotal,
-      discounted,
-      discountType,
-      dispercent,
-      totalAfterDiscount,
-      shippingfee,
-    } = cart;
-    return res.json({
-      cartTotal,
-      discounted,
-      discountType,
-      dispercent,
-      totalAfterDiscount,
-      shippingfee,
+    // Check if the user is subscribed to the newsletter
+    const existingEmailOptIn = await EmailOptIn.findOne({
+      email: req.user.email,
     });
-  }
 
-  return res.json({
-    cartTotal: 0,
-    discounted: 0,
-    totalAfterDiscount: 0,
-    shippingfee: 0,
-  });
+    const isSubscribed = !!existingEmailOptIn; // true if found, false otherwise
+
+    let cart = null;
+    if (user) {
+      cart = await Cart.findOne({ orderdBy: user._id }).exec();
+    }
+
+    if (cart) {
+      const {
+        cartTotal,
+        discounted,
+        discountType,
+        dispercent,
+        totalAfterDiscount,
+        shippingfee,
+      } = cart;
+      return res.json({
+        isSubscribed,
+        cartTotal,
+        discounted,
+        discountType,
+        dispercent,
+        totalAfterDiscount,
+        shippingfee,
+      });
+    }
+
+    return res.json({
+      isSubscribed,
+      cartTotal: 0,
+      discounted: 0,
+      totalAfterDiscount: 0,
+      shippingfee: 0,
+    });
+  } catch (error) {
+    console.error("Error fetching user cart:", error);
+    return res.status(500).json({ message: "An error occurred" });
+  }
 };
 
 exports.emptyCart = async (req, res) => {
@@ -681,13 +710,26 @@ exports.createCashOrder = async (req, res) => {
 };
 
 exports.createOrder = async (req, res) => {
-  const { image, BFT, couponApplied, values } = req.body;
+  const { image, BFT, couponApplied, values, newsletter } = req.body;
 
   // if Contact details missing ib form values
   if (!values.Contact) return res.json({ error: "Contact Details missing*" });
 
   // if Shipping Address missing ib form values
   if (!values.Address) return res.json({ error: "Shipping address missing*" });
+
+  if (newsletter) {
+    // Check if the email already exists in EmailOptIn
+    const existingEmailOptIn = await EmailOptIn.findOne({
+      email: req.user.email,
+    });
+
+    if (!existingEmailOptIn) {
+      // Add the email to EmailOptIn if it doesn't exist
+      const newEmailOptIn = new EmailOptIn({ email: req.user.email });
+      await newEmailOptIn.save();
+    }
+  }
 
   const user = await User.findOne({ email: req.user.email }).exec();
 
