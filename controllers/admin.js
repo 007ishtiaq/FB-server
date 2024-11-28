@@ -6,6 +6,7 @@ const Productcancel = require("../models/productcancel");
 const Productreturn = require("../models/productreturn");
 const Ledger = require("../models/ledger");
 const Shipping = require("../models/shipping");
+const Cart = require("../models/cart");
 const {
   transporter,
   orderReceipttemplate,
@@ -1809,5 +1810,20 @@ exports.deleteAdminReview = async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+exports.cartslist = async (req, res) => {
+  try {
+    // Fetch all carts and populate related fields for products and user
+    const carts = await Cart.find()
+      .populate("products.product", "title slug") // Adjust fields to populate as needed
+      .populate("orderdBy", "name email"); // Populate orderdBy with user's name and email
+
+    // Return the carts in the response
+    res.status(200).json(carts);
+  } catch (error) {
+    console.error("Error fetching carts:", error.message);
+    res.status(500).json({ error: "Error fetching carts" });
   }
 };

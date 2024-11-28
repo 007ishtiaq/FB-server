@@ -30,6 +30,7 @@ const {
   addAdminReview,
   getAdminReview,
   deleteAdminReview,
+  cartslist,
 } = require("../controllers/admin");
 
 // routes
@@ -158,5 +159,8 @@ router.put(
   adminCheck,
   deleteAdminReview
 );
+
+// get All users cart data
+router.post("/cartsdatalist", expiryCheck, authCheck, adminCheck, cartslist);
 
 module.exports = router;
