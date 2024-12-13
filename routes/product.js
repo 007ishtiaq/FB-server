@@ -10,6 +10,8 @@ const {
   listAll,
   listByPage,
   remove,
+  getjsondata,
+  uploadjsondata,
   read,
   readAdmin,
   update,
@@ -33,6 +35,15 @@ router.get("/productsByCount/:count", expiryCheck, listAll);
 router.post("/productsByPage", expiryCheck, listByPage);
 
 router.delete("/product/:slug", expiryCheck, authCheck, adminCheck, remove);
+router.get("/getproductsjson", expiryCheck, authCheck, adminCheck, getjsondata);
+router.post(
+  "/uploadproductsjson",
+  expiryCheck,
+  authCheck,
+  adminCheck,
+  uploadjsondata
+);
+
 router.post(
   "/productAdmin/:slug",
   expiryCheck,

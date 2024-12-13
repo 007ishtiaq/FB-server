@@ -86,6 +86,70 @@ exports.remove = async (req, res) => {
   }
 };
 
+exports.getjsondata = async (req, res) => {
+  try {
+    // Fetch all data from the collection
+    const data = await Product.find({});
+    res.json(data); // Send data as JSON
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
+};
+
+exports.uploadjsondata = async (req, res) => {
+  try {
+    const jsonData = req.body; // Assuming the JSON data is sent in the request body
+
+    // Transform data if necessary (convert `$oid` and `$date` formats)
+    const transformData = (data) => {
+      if (Array.isArray(data)) {
+        return data.map(transformItem);
+      }
+      return transformItem(data);
+    };
+
+    const transformItem = (item) => ({
+      ...item,
+      _id: item._id?.$oid || item._id,
+      category: item.category?.$oid || item.category,
+      attributes: item.attributes?.map((attr) => ({
+        ...attr,
+        subs: attr.subs?.$oid || attr.subs,
+        subs2: attr.subs2 || [],
+        _id: attr._id?.$oid || attr._id,
+      })),
+      createdAt: item.createdAt?.$date
+        ? new Date(item.createdAt.$date)
+        : item.createdAt,
+      updatedAt: item.updatedAt?.$date
+        ? new Date(item.updatedAt.$date)
+        : item.updatedAt,
+    });
+
+    const transformedData = transformData(jsonData);
+
+    // Validate and insert JSON data
+    if (Array.isArray(transformedData)) {
+      for (const item of transformedData) {
+        const product = new Product(item);
+        await product.validate(); // Validate each item
+      }
+      await Product.insertMany(transformedData, { ordered: false }); // Allow partial success
+    } else {
+      const product = new Product(transformedData);
+      await product.validate(); // Validate single document
+      await Product.create(transformedData);
+    }
+
+    res.json({ success: true, message: "Data uploaded successfully!" });
+  } catch (error) {
+    console.error("Error uploading JSON:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to upload data", details: error.message });
+  }
+};
+
 exports.read = async (req, res) => {
   try {
     const product = await Product.findOne({ slug: req.params.slug })
