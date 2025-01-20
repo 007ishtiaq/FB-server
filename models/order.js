@@ -54,9 +54,12 @@ const orderSchema = new mongoose.Schema(
         "Bank Fund Transfer",
         "Jazz Cash Wallet",
         "Easypesa Wallet",
-        "Cash On Delivery",
+        "Credit Card Charged",
         "Not Selected",
       ],
+    },
+    StripePaymentId: {
+      type: String,
     },
     PaymentSlip: {
       url: {

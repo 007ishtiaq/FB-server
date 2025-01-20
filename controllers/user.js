@@ -642,7 +642,9 @@ function generateNumericID() {
 }
 
 exports.createCashOrder = async (req, res) => {
-  const { COD, couponApplied, values } = req.body;
+  const { COD, couponApplied, values, paymentId } = req.body;
+
+  console.log("paymentId", paymentId);
 
   // if COD is true, create order with status of Cash On Delivery
   if (!COD) return res.json({ error: "Create cash order failed" });
@@ -689,7 +691,8 @@ exports.createCashOrder = async (req, res) => {
     email: req.user.email,
     shippingfee: userCart.shippingfee,
     orderdBy: user._id,
-    paymentStatus: "Cash On Delivery",
+    paymentStatus: "Credit Card Charged",
+    StripePaymentId: paymentId,
   }).save();
 
   // decrement quantity, increment sold
