@@ -652,9 +652,9 @@ function generateNumericID() {
 }
 
 exports.createCashOrder = async (req, res) => {
-  const { COD, couponApplied, values, paymentId } = req.body;
+  const { COD, couponApplied, values, paymentId, newsletter } = req.body;
 
-  console.log("paymentId", paymentId);
+  console.log("newsletter", newsletter);
 
   // if COD is true, create order with status of Cash On Delivery
   if (!COD) return res.json({ error: "Create cash order failed" });
@@ -664,6 +664,19 @@ exports.createCashOrder = async (req, res) => {
 
   // if Shipping Address missing ib form values
   if (!values.Address) return res.json({ error: "Shipping address missing*" });
+
+  if (newsletter) {
+    // Check if the email already exists in EmailOptIn
+    const existingEmailOptIn = await EmailOptIn.findOne({
+      email: req.user.email,
+    });
+
+    if (!existingEmailOptIn) {
+      // Add the email to EmailOptIn if it doesn't exist
+      const newEmailOptIn = new EmailOptIn({ email: req.user.email });
+      await newEmailOptIn.save();
+    }
+  }
 
   const user = await User.findOne({ email: req.user.email }).exec();
 
