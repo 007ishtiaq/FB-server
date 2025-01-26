@@ -44,15 +44,23 @@ exports.userCart = async (req, res) => {
   // Iterate through the items in the cart
   for (let i = 0; i < cart.length; i++) {
     let object = {};
-    object.product = cart[i]._id;
-    object.count = cart[i].count;
-    object.color = cart[i].color;
-    object.size = cart[i].size;
 
     // Get product details from the database
     let productFromDb = await Product.findById(cart[i]._id)
       .select("price disprice sizes shippingcharges")
       .exec();
+
+    if (!productFromDb) {
+      return res.status(400).json({
+        error:
+          "Some items do not exist on the site from your cart, please remove them before proceed",
+      });
+    }
+
+    object.product = cart[i]._id;
+    object.count = cart[i].count;
+    object.color = cart[i].color;
+    object.size = cart[i].size;
 
     // Check if the product has a sizes array and find the matching size
     if (
@@ -110,10 +118,12 @@ exports.userCart = async (req, res) => {
       .select("shippingcharges")
       .exec();
 
-    if (products[i].price === 0) {
-      shippingfee += productFromDb.shippingcharges * products[i].count;
-    } else {
-      shippingfee += productFromDb.shippingcharges;
+    if (productFromDb) {
+      if (products[i].price === 0) {
+        shippingfee += productFromDb.shippingcharges * products[i].count;
+      } else {
+        shippingfee += productFromDb.shippingcharges;
+      }
     }
   }
 
