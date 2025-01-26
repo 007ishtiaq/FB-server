@@ -17,8 +17,7 @@ exports.create = async (req, res) => {
     req.body.slug = slugify(`${req.body.title} - ${req.body.color}`);
 
     // Handle shipping charges
-    if (req.body.shippingcharges === "" || req.body.shippingcharges == null) {
-      // Calculate shipping charges if not provided or empty string
+    if (!req.body.shippingcharges) {
       let shippingfee = 0;
       let shippings = await Shipping.find({}).exec();
       for (let i = 0; i < shippings.length; i++) {
@@ -37,6 +36,13 @@ exports.create = async (req, res) => {
     res.json(newProduct);
   } catch (err) {
     console.error(err);
+
+    // Check if error is a Mongoose validation error
+    if (err.name === "ValidationError") {
+      const messages = Object.values(err.errors).map((error) => error.message);
+      return res.status(400).json({ error: messages.join(", ") });
+    }
+
     res.status(500).json({ error: "Server error" });
   }
 };

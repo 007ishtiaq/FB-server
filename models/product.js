@@ -82,6 +82,7 @@ const productSchema = new mongoose.Schema(
     },
     color: {
       type: String,
+      required: true,
     },
     variants: [
       {
@@ -101,11 +102,11 @@ const productSchema = new mongoose.Schema(
     },
     sizes: [
       {
-        size: { type: String, required: true }, // Example: "M"
+        size: { type: String }, // Example: "M"
         prices: [
           {
-            type: { type: String, required: true }, // Example: "price 1", "price 2"
-            value: { type: Number, required: true }, // The price value
+            type: { type: String }, // Example: "price 1", "price 2"
+            value: { type: Number }, // The price value
           },
         ],
       },
