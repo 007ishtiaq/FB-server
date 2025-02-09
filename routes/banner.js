@@ -12,6 +12,8 @@ const {
   listRelated,
   update,
   read,
+  getjsondata,
+  uploadjsondata,
 } = require("../controllers/banner");
 
 // routes
@@ -22,5 +24,13 @@ router.post("/banners", expiryCheck, listRelated);
 router.put("/banner/:slug", expiryCheck, authCheck, adminCheck, update);
 router.get("/banner/:slug", expiryCheck, read);
 // router.put("/category/:slug", expiryCheck, authCheck, adminCheck, update);
+router.get("/getbannersjson", expiryCheck, authCheck, adminCheck, getjsondata);
+router.post(
+  "/uploadbannersjson",
+  expiryCheck,
+  authCheck,
+  adminCheck,
+  uploadjsondata
+);
 
 module.exports = router;

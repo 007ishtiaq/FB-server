@@ -31,6 +31,8 @@ const {
   getAdminReview,
   deleteAdminReview,
   cartslist,
+  getjsondata,
+  uploadjsondata,
 } = require("../controllers/admin");
 
 // routes
@@ -162,5 +164,14 @@ router.put(
 
 // get All users cart data
 router.post("/cartsdatalist", expiryCheck, authCheck, adminCheck, cartslist);
+
+router.get("/getordersjson", expiryCheck, authCheck, adminCheck, getjsondata);
+router.post(
+  "/uploadordersjson",
+  expiryCheck,
+  authCheck,
+  adminCheck,
+  uploadjsondata
+);
 
 module.exports = router;

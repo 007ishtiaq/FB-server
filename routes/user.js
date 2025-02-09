@@ -29,6 +29,8 @@ const {
   shippingcreate,
   shippinglist,
   shippingremove,
+  getjsondata,
+  uploadjsondata,
   createCancellation,
   createReturn,
   handlenewsletterSubscribe,
@@ -77,6 +79,14 @@ router.delete(
   authCheck,
   adminCheck,
   shippingremove
+);
+router.get("/getshippingjson", expiryCheck, authCheck, adminCheck, getjsondata);
+router.post(
+  "/uploadshippingjson",
+  expiryCheck,
+  authCheck,
+  adminCheck,
+  uploadjsondata
 );
 
 // wishlist

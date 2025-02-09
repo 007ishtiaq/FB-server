@@ -155,6 +155,68 @@ exports.ratedProducts = async (req, res) => {
   }
 };
 
+exports.getjsondata = async (req, res) => {
+  try {
+    // Fetch all data from the collection
+    const data = await Review.find({});
+    res.json(data); // Send data as JSON
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
+};
+
+exports.uploadjsondata = async (req, res) => {
+  try {
+    const jsonData = req.body; // Assuming the JSON data is sent in the request body
+
+    // Transform data if necessary (convert $oid and $date formats)
+    const transformReviews = (data) => {
+      if (Array.isArray(data)) {
+        return data.map(transformReviewItem);
+      }
+      return transformReviewItem(data);
+    };
+
+    const transformReviewItem = (item) => ({
+      ...item,
+      _id: item._id?.$oid || item._id,
+      product: item.product?.$oid || item.product, // Ensure product is correctly referenced as ObjectId
+      postedBy: item.postedBy?.$oid || item.postedBy, // Ensure postedBy is correctly referenced as ObjectId
+      postedOn: item.postedOn?.$date
+        ? new Date(item.postedOn.$date)
+        : new Date(item.postedOn),
+      createdAt: item.createdAt?.$date
+        ? new Date(item.createdAt.$date)
+        : new Date(item.createdAt),
+      updatedAt: item.updatedAt?.$date
+        ? new Date(item.updatedAt.$date)
+        : new Date(item.updatedAt),
+    });
+
+    const transformedData = transformReviews(jsonData);
+
+    // Validate and insert JSON data
+    if (Array.isArray(transformedData)) {
+      for (const item of transformedData) {
+        const review = new Review(item);
+        await review.validate(); // Validate each item
+      }
+      await Review.insertMany(transformedData, { ordered: false }); // Allow partial success
+    } else {
+      const review = new Review(transformedData);
+      await review.validate(); // Validate single document
+      await Review.create(transformedData);
+    }
+
+    res.json({ success: true, message: "Reviews uploaded successfully!" });
+  } catch (error) {
+    console.error("Error uploading reviews:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to upload reviews", details: error.message });
+  }
+};
+
 // // --------- below mentioned old functions--------
 // const RatingProduct = async (req, res) => {
 //   try {

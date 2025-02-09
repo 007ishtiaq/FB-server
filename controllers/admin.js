@@ -1827,3 +1827,68 @@ exports.cartslist = async (req, res) => {
     res.status(500).json({ error: "Error fetching carts" });
   }
 };
+
+exports.getjsondata = async (req, res) => {
+  try {
+    // Fetch all data from the collection
+    const data = await Order.find({});
+    res.json(data); // Send data as JSON
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
+};
+
+exports.uploadjsondata = async (req, res) => {
+  try {
+    const jsonData = req.body; // Assuming JSON data is sent in the request body
+
+    // Transform data to ensure proper formatting
+    const transformOrderData = (data) => {
+      if (Array.isArray(data)) {
+        return data.map(transformOrderItem);
+      }
+      return transformOrderItem(data);
+    };
+
+    const transformOrderItem = (item) => ({
+      ...item,
+      _id: item._id?.$oid || item._id,
+      createdAt: item.createdAt?.$date
+        ? new Date(item.createdAt.$date)
+        : new Date(item.createdAt),
+      updatedAt: item.updatedAt?.$date
+        ? new Date(item.updatedAt.$date)
+        : new Date(item.updatedAt),
+      orderdBy: item.orderdBy?.$oid || item.orderdBy,
+      products: item.products.map((productItem) => ({
+        ...productItem,
+        product: {
+          ...productItem.product,
+          _id: productItem.product._id?.$oid || productItem.product._id,
+        },
+      })),
+    });
+
+    const transformedData = transformOrderData(jsonData);
+
+    // Validate and insert data into the database
+    if (Array.isArray(transformedData)) {
+      for (const item of transformedData) {
+        const order = new Order(item);
+        await order.validate(); // Validate each order before insertion
+      }
+      await Order.insertMany(transformedData, { ordered: false }); // Allow partial success
+    } else {
+      const order = new Order(transformedData);
+      await order.validate(); // Validate single document
+      await Order.create(transformedData);
+    }
+
+    res.json({ success: true, message: "Order data uploaded successfully!" });
+  } catch (error) {
+    console.error("Error uploading order data:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to upload order data", details: error.message });
+  }
+};

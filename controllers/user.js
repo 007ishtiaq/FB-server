@@ -843,6 +843,69 @@ exports.shippinglist = async (req, res) => {
   }
 };
 
+exports.getjsondata = async (req, res) => {
+  try {
+    // Fetch all data from the collection
+    const data = await Shipping.find({});
+    res.json(data); // Send data as JSON
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
+};
+
+exports.uploadjsondata = async (req, res) => {
+  try {
+    const jsonData = req.body; // Assuming JSON data is sent in the request body
+
+    // Transform data if necessary (e.g., handle $oid and $date formats)
+    const transformShippingData = (data) => {
+      if (Array.isArray(data)) {
+        return data.map(transformShippingItem);
+      }
+      return transformShippingItem(data);
+    };
+
+    const transformShippingItem = (item) => ({
+      ...item,
+      _id: item._id?.$oid || item._id, // Handle $oid if present
+      createdAt: item.createdAt?.$date
+        ? new Date(item.createdAt.$date)
+        : new Date(item.createdAt), // Convert $date or ISO strings to Date
+      updatedAt: item.updatedAt?.$date
+        ? new Date(item.updatedAt.$date)
+        : new Date(item.updatedAt),
+    });
+
+    const transformedData = transformShippingData(jsonData);
+
+    // Validate and insert JSON data
+    if (Array.isArray(transformedData)) {
+      for (const item of transformedData) {
+        const shipping = new Shipping(item);
+        await shipping.validate(); // Validate each item before insertion
+      }
+      await Shipping.insertMany(transformedData, { ordered: false }); // Allow partial success
+    } else {
+      const shipping = new Shipping(transformedData);
+      await shipping.validate(); // Validate single document
+      await Shipping.create(transformedData);
+    }
+
+    res.json({
+      success: true,
+      message: "Shipping data uploaded successfully!",
+    });
+  } catch (error) {
+    console.error("Error uploading shipping data:", error);
+    res
+      .status(500)
+      .json({
+        error: "Failed to upload shipping data",
+        details: error.message,
+      });
+  }
+};
+
 exports.createCancellation = async (req, res) => {
   const { id, itemid, cancelForm } = req.body;
   // console.log(cancelForm);

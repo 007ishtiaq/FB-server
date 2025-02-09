@@ -12,6 +12,8 @@ const {
   listRelated,
   update,
   read,
+  getjsondata,
+  uploadjsondata,
 } = require("../controllers/staticText");
 
 // routes
@@ -33,5 +35,13 @@ router.put(
   update
 );
 router.get("/admin/statictext/:slug", expiryCheck, read);
+router.get("/getstaticjson", expiryCheck, authCheck, adminCheck, getjsondata);
+router.post(
+  "/uploadstaticjson",
+  expiryCheck,
+  authCheck,
+  adminCheck,
+  uploadjsondata
+);
 
 module.exports = router;
